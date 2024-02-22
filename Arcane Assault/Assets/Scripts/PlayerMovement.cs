@@ -13,9 +13,12 @@ public class PlayerMovement : NetworkBehaviour
     private PlayerInputActions _playerInputActions;
     private CharacterController _characterController;
 
-    [SerializeField] private float _movementSpeed = 2.5f;
-    [SerializeField] private float _mouseSensitivity = 1f;
-    [SerializeField] private float _jumpVelocity = 5f;
+    [SerializeField] private float movementSpeed = 2.5f;
+    [SerializeField] private float mouseSensitivity = 1f;
+    [SerializeField] private float jumpVelocity = 5f;
+    [SerializeField] private float gravity = -9.81f;
+
+    private float _verticalVelocity = 0f;
 
     private void Awake()
     {
@@ -40,9 +43,21 @@ public class PlayerMovement : NetworkBehaviour
     {
         _movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
         _cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
-        
+
+        UpdateGravity();
         MoveCamera();
         MovePlayer();
+        UpdateGravity();
+    }
+
+    // Must be called before and after updating position.
+    private void UpdateGravity()
+    {
+        _verticalVelocity += gravity * Time.deltaTime * 0.5f;
+        if (_characterController.isGrounded && _verticalVelocity < 0)
+        {
+            _verticalVelocity = gravity * Time.deltaTime * 0.5f;
+        }
     }
 
     private void MoveCamera()
@@ -52,12 +67,20 @@ public class PlayerMovement : NetworkBehaviour
     
     private void MovePlayer()
     {
-        Vector3 movementDirection = new Vector3(_movementInput.x, 0, _movementInput.y);
-        _characterController.Move(movementDirection * (_movementSpeed * Time.deltaTime));
+        float zMovement = _movementInput.y * movementSpeed * Time.deltaTime;
+        float xMovement = _movementInput.x * movementSpeed * Time.deltaTime;
+        float yMovement = _verticalVelocity * Time.deltaTime;
+        
+        Vector3 movement = new Vector3(xMovement, yMovement, zMovement);
+        _characterController.Move(movement);
     }
 
     private void Jump(InputAction.CallbackContext context)
     {
-        // TODO
+        Debug.Log("Jump pressed!");
+        if (_characterController.isGrounded)
+        {
+            _verticalVelocity += jumpVelocity;
+        }
     }
 }
