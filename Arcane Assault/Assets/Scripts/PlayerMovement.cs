@@ -12,6 +12,7 @@ public class PlayerMovement : NetworkBehaviour
 
     private PlayerInputActions _playerInputActions;
     private CharacterController _characterController;
+    private Camera _playerCamera;
 
     [SerializeField] private float movementSpeed = 2.5f;
     [SerializeField] private float mouseSensitivity = 1f;
@@ -20,15 +21,20 @@ public class PlayerMovement : NetworkBehaviour
 
     private float _verticalVelocity = 0f;
 
+    private float _horizontalRotation = 0f;
+    private float _verticalRotation = 0f;
+
     private void Awake()
     {
         _characterController = gameObject.GetComponent<CharacterController>();
+        _playerCamera = gameObject.GetComponentInChildren<Camera>();
 
         _playerInputActions = new PlayerInputActions();
     }
 
     private void OnEnable()
     {
+        Cursor.lockState = CursorLockMode.Locked;
         _playerInputActions.Player.Enable();
         _playerInputActions.Player.Jump.performed += Jump;
     }
@@ -37,13 +43,14 @@ public class PlayerMovement : NetworkBehaviour
     {
         _playerInputActions.Player.Jump.performed -= Jump;
         _playerInputActions.Player.Disable();
+        Cursor.lockState = CursorLockMode.None;
     }
 
     private void Update()
     {
         _movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
         _cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
-
+        
         UpdateGravity();
         MoveCamera();
         MovePlayer();
@@ -62,7 +69,12 @@ public class PlayerMovement : NetworkBehaviour
 
     private void MoveCamera()
     {
-        // TODO
+        _horizontalRotation += _cameraInput.x * mouseSensitivity;
+        _verticalRotation -= _cameraInput.y * mouseSensitivity;
+        _verticalRotation = Mathf.Clamp(_verticalRotation, -90f, 90f);
+        
+        transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
+        _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
     }
     
     private void MovePlayer()
@@ -72,12 +84,13 @@ public class PlayerMovement : NetworkBehaviour
         float yMovement = _verticalVelocity * Time.deltaTime;
         
         Vector3 movement = new Vector3(xMovement, yMovement, zMovement);
+        movement = transform.TransformDirection(movement);
+        
         _characterController.Move(movement);
     }
 
     private void Jump(InputAction.CallbackContext context)
     {
-        Debug.Log("Jump pressed!");
         if (_characterController.isGrounded)
         {
             _verticalVelocity += jumpVelocity;
