@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
@@ -7,9 +6,6 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    private Vector2 _movementInput;
-    private Vector2 _cameraInput;
-
     private PlayerInputActions _playerInputActions;
     private CharacterController _characterController;
     private Camera _playerCamera;
@@ -20,9 +16,25 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float gravity = -9.81f;
 
     private float _verticalVelocity = 0f;
-
+    
     private float _horizontalRotation = 0f;
     private float _verticalRotation = 0f;
+
+    private struct PlayerPositionState
+    {
+        public Vector3 Position { get; set; }
+        public float HorizontalRotation { get; set; }
+        public float VerticalRotation { get; set; }
+
+        public PlayerPositionState(Vector3 position, float horizontalRotation, float verticalRotation)
+        {
+            Position = position;
+            HorizontalRotation = horizontalRotation;
+            VerticalRotation = verticalRotation;
+        }
+    }
+
+    private readonly List<PlayerPositionState> _clientSidePredictionHistory = new();
 
     private void Awake()
     {
@@ -32,8 +44,16 @@ public class PlayerMovement : NetworkBehaviour
         _playerInputActions = new PlayerInputActions();
     }
 
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        OnEnable();
+    }
+
     private void OnEnable()
     {
+        if (!IsOwner) return;
+        
         Cursor.lockState = CursorLockMode.Locked;
         _playerInputActions.Player.Enable();
         _playerInputActions.Player.Jump.performed += Jump;
@@ -41,6 +61,8 @@ public class PlayerMovement : NetworkBehaviour
 
     private void OnDisable()
     {
+        if (!IsOwner) return;
+        
         _playerInputActions.Player.Jump.performed -= Jump;
         _playerInputActions.Player.Disable();
         Cursor.lockState = CursorLockMode.None;
@@ -48,40 +70,96 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        _movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
-        _cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
+        if (!IsOwner || IsServer) return;
         
-        HalfApplyGravity();
-        MoveCamera();
-        MovePlayer();
-        HalfApplyGravity();
+        Vector2 movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
+        Vector2 cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
+        
+        Move(Time.deltaTime, movementInput, cameraInput);
+        PlayerPositionState currentState =
+            new PlayerPositionState(transform.position, _horizontalRotation, _verticalRotation);
+        _clientSidePredictionHistory.Add(currentState);
+        
+        MoveServerRpc(Time.deltaTime, movementInput, cameraInput);
     }
 
-    // Must be called before and after updating position.
-    private void HalfApplyGravity()
+    private void Move(float deltaTime, Vector2 movementInput, Vector2 cameraInput)
     {
-        _verticalVelocity += gravity * Time.deltaTime * 0.5f;
-        if (_characterController.isGrounded && _verticalVelocity < 0)
+        HalfApplyGravity(deltaTime);
+        MoveCamera(cameraInput);
+        MovePlayer(deltaTime, movementInput);
+        HalfApplyGravity(deltaTime);
+    }
+    
+    [ServerRpc]
+    private void MoveServerRpc(float deltaTime, Vector2 movementInput, Vector2 cameraInput)
+    {
+        Move(deltaTime, movementInput, cameraInput);
+        MoveClientRpc(transform.position, _horizontalRotation, _verticalRotation);
+    }
+    
+    [ClientRpc]
+    private void MoveClientRpc(Vector3 position, float horizontalRotation, float verticalRotation)
+    {
+        if (IsOwner)
         {
-            _verticalVelocity = gravity * Time.deltaTime * 0.5f;
+            if (_clientSidePredictionHistory.Count <= 0) return;
+            PlayerPositionState prediction = _clientSidePredictionHistory[0];
+            _clientSidePredictionHistory.RemoveAt(0);
+
+            Vector3 positionPredictionError = position - prediction.Position;
+            transform.position += positionPredictionError;
+
+            float hrPredictionError = horizontalRotation - prediction.HorizontalRotation;
+            _horizontalRotation += hrPredictionError;
+
+            float vrPredictionError = verticalRotation - prediction.VerticalRotation;
+            _verticalRotation += vrPredictionError;
+            
+            _clientSidePredictionHistory.ForEach(e =>
+            {
+                e.Position += positionPredictionError;
+                e.HorizontalRotation += hrPredictionError;
+                e.VerticalRotation += vrPredictionError;
+            });
+            
+            transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
+            _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
+        }
+        else
+        {
+            transform.position = position;
+            
+            transform.rotation = Quaternion.Euler(0, horizontalRotation, 0);
+            _playerCamera.transform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
         }
     }
 
-    private void MoveCamera()
+    // Must be called before and after updating position.
+    private void HalfApplyGravity(float deltaTime)
     {
-        _horizontalRotation += _cameraInput.x * mouseSensitivity;
-        _verticalRotation -= _cameraInput.y * mouseSensitivity;
+        _verticalVelocity += gravity * deltaTime * 0.5f;
+        if (_characterController.isGrounded && _verticalVelocity < 0)
+        {
+            _verticalVelocity = gravity * deltaTime * 0.5f;
+        }
+    }
+
+    private void MoveCamera(Vector2 cameraInput)
+    {
+        _horizontalRotation += cameraInput.x * mouseSensitivity;
+        _verticalRotation -= cameraInput.y * mouseSensitivity;
         _verticalRotation = Mathf.Clamp(_verticalRotation, -90f, 90f);
         
         transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
         _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
     }
     
-    private void MovePlayer()
+    private void MovePlayer(float deltaTime, Vector2 movementInput)
     {
-        float zMovement = _movementInput.y * movementSpeed * Time.deltaTime;
-        float xMovement = _movementInput.x * movementSpeed * Time.deltaTime;
-        float yMovement = _verticalVelocity * Time.deltaTime;
+        float zMovement = movementInput.y * movementSpeed * deltaTime;
+        float xMovement = movementInput.x * movementSpeed * deltaTime;
+        float yMovement = _verticalVelocity * deltaTime;
         
         Vector3 movement = new Vector3(xMovement, yMovement, zMovement);
         movement = transform.TransformDirection(movement);
@@ -89,6 +167,7 @@ public class PlayerMovement : NetworkBehaviour
         _characterController.Move(movement);
     }
 
+    // TODO: Sync jump to the server.
     private void Jump(InputAction.CallbackContext context)
     {
         if (_characterController.isGrounded)

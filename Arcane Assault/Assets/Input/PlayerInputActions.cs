@@ -134,6 +134,54 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""ServerDebug"",
+            ""id"": ""b781daef-dd60-4733-8b08-ba9958edbc85"",
+            ""actions"": [
+                {
+                    ""name"": ""StartServer"",
+                    ""type"": ""Button"",
+                    ""id"": ""f6ec63a1-f317-430f-9896-1420c497fb39"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""StartClient"",
+                    ""type"": ""Button"",
+                    ""id"": ""8cd75682-1d92-4f51-a785-046dc553ddb6"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""aa2bde30-e838-4bd9-aad4-386791d32158"",
+                    ""path"": ""<Keyboard>/h"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""StartServer"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""80fc7a94-171d-485d-b0ea-b8e06cd606a4"",
+                    ""path"": ""<Keyboard>/j"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""StartClient"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -143,6 +191,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_PlayerMovement = m_Player.FindAction("PlayerMovement", throwIfNotFound: true);
         m_Player_CameraMovement = m_Player.FindAction("CameraMovement", throwIfNotFound: true);
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
+        // ServerDebug
+        m_ServerDebug = asset.FindActionMap("ServerDebug", throwIfNotFound: true);
+        m_ServerDebug_StartServer = m_ServerDebug.FindAction("StartServer", throwIfNotFound: true);
+        m_ServerDebug_StartClient = m_ServerDebug.FindAction("StartClient", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -262,10 +314,69 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         }
     }
     public PlayerActions @Player => new PlayerActions(this);
+
+    // ServerDebug
+    private readonly InputActionMap m_ServerDebug;
+    private List<IServerDebugActions> m_ServerDebugActionsCallbackInterfaces = new List<IServerDebugActions>();
+    private readonly InputAction m_ServerDebug_StartServer;
+    private readonly InputAction m_ServerDebug_StartClient;
+    public struct ServerDebugActions
+    {
+        private @PlayerInputActions m_Wrapper;
+        public ServerDebugActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
+        public InputAction @StartServer => m_Wrapper.m_ServerDebug_StartServer;
+        public InputAction @StartClient => m_Wrapper.m_ServerDebug_StartClient;
+        public InputActionMap Get() { return m_Wrapper.m_ServerDebug; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(ServerDebugActions set) { return set.Get(); }
+        public void AddCallbacks(IServerDebugActions instance)
+        {
+            if (instance == null || m_Wrapper.m_ServerDebugActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_ServerDebugActionsCallbackInterfaces.Add(instance);
+            @StartServer.started += instance.OnStartServer;
+            @StartServer.performed += instance.OnStartServer;
+            @StartServer.canceled += instance.OnStartServer;
+            @StartClient.started += instance.OnStartClient;
+            @StartClient.performed += instance.OnStartClient;
+            @StartClient.canceled += instance.OnStartClient;
+        }
+
+        private void UnregisterCallbacks(IServerDebugActions instance)
+        {
+            @StartServer.started -= instance.OnStartServer;
+            @StartServer.performed -= instance.OnStartServer;
+            @StartServer.canceled -= instance.OnStartServer;
+            @StartClient.started -= instance.OnStartClient;
+            @StartClient.performed -= instance.OnStartClient;
+            @StartClient.canceled -= instance.OnStartClient;
+        }
+
+        public void RemoveCallbacks(IServerDebugActions instance)
+        {
+            if (m_Wrapper.m_ServerDebugActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(IServerDebugActions instance)
+        {
+            foreach (var item in m_Wrapper.m_ServerDebugActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_ServerDebugActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public ServerDebugActions @ServerDebug => new ServerDebugActions(this);
     public interface IPlayerActions
     {
         void OnPlayerMovement(InputAction.CallbackContext context);
         void OnCameraMovement(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
+    }
+    public interface IServerDebugActions
+    {
+        void OnStartServer(InputAction.CallbackContext context);
+        void OnStartClient(InputAction.CallbackContext context);
     }
 }
