@@ -18,7 +18,7 @@ public class PlayerMovement : NetworkBehaviour
     private float _horizontalRotation;
     private float _verticalRotation;
 
-    private struct PlayerPositionState
+    private class PlayerPositionState
     {
         public Vector3 Position { get; set; }
         public float HorizontalRotation { get; set; }
@@ -113,12 +113,12 @@ public class PlayerMovement : NetworkBehaviour
             float vrPredictionError = verticalRotation - prediction.VerticalRotation;
             _verticalRotation += vrPredictionError;
             
-            _clientSidePredictionHistory.ForEach(e =>
+            foreach (PlayerPositionState p in _clientSidePredictionHistory)
             {
-                e.Position += positionPredictionError;
-                e.HorizontalRotation += hrPredictionError;
-                e.VerticalRotation += vrPredictionError;
-            });
+                p.Position += positionPredictionError;
+                p.HorizontalRotation += hrPredictionError;
+                p.VerticalRotation += vrPredictionError;
+            }
             
             transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
             _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
