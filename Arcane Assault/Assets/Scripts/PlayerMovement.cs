@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using UnityEngine.InputSystem;
 
 public class PlayerMovement : NetworkBehaviour
 {
@@ -15,10 +13,10 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float jumpVelocity = 5f;
     [SerializeField] private float gravity = -9.81f;
 
-    private float _verticalVelocity = 0f;
+    private float _verticalVelocity;
     
-    private float _horizontalRotation = 0f;
-    private float _verticalRotation = 0f;
+    private float _horizontalRotation;
+    private float _verticalRotation;
 
     private struct PlayerPositionState
     {
@@ -56,14 +54,12 @@ public class PlayerMovement : NetworkBehaviour
         
         Cursor.lockState = CursorLockMode.Locked;
         _playerInputActions.Player.Enable();
-        _playerInputActions.Player.Jump.performed += Jump;
     }
 
     private void OnDisable()
     {
         if (!IsOwner) return;
         
-        _playerInputActions.Player.Jump.performed -= Jump;
         _playerInputActions.Player.Disable();
         Cursor.lockState = CursorLockMode.None;
     }
@@ -74,27 +70,28 @@ public class PlayerMovement : NetworkBehaviour
         
         Vector2 movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
         Vector2 cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
+        bool jumpInput = _playerInputActions.Player.Jump.WasPerformedThisFrame();
         
-        Move(Time.deltaTime, movementInput, cameraInput);
+        Move(Time.deltaTime, movementInput, cameraInput, jumpInput);
         PlayerPositionState currentState =
             new PlayerPositionState(transform.position, _horizontalRotation, _verticalRotation);
         _clientSidePredictionHistory.Add(currentState);
         
-        MoveServerRpc(Time.deltaTime, movementInput, cameraInput);
+        MoveServerRpc(Time.deltaTime, movementInput, cameraInput, jumpInput);
     }
 
-    private void Move(float deltaTime, Vector2 movementInput, Vector2 cameraInput)
+    private void Move(float deltaTime, Vector2 movementInput, Vector2 cameraInput, bool jumpInput)
     {
         HalfApplyGravity(deltaTime);
         MoveCamera(cameraInput);
-        MovePlayer(deltaTime, movementInput);
+        MovePlayer(deltaTime, movementInput, jumpInput);
         HalfApplyGravity(deltaTime);
     }
     
     [ServerRpc]
-    private void MoveServerRpc(float deltaTime, Vector2 movementInput, Vector2 cameraInput)
+    private void MoveServerRpc(float deltaTime, Vector2 movementInput, Vector2 cameraInput, bool jumpInput)
     {
-        Move(deltaTime, movementInput, cameraInput);
+        Move(deltaTime, movementInput, cameraInput, jumpInput);
         MoveClientRpc(transform.position, _horizontalRotation, _verticalRotation);
     }
     
@@ -155,8 +152,10 @@ public class PlayerMovement : NetworkBehaviour
         _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
     }
     
-    private void MovePlayer(float deltaTime, Vector2 movementInput)
+    private void MovePlayer(float deltaTime, Vector2 movementInput, bool jumpInput)
     {
+        if (jumpInput) Jump();
+        
         float zMovement = movementInput.y * movementSpeed * deltaTime;
         float xMovement = movementInput.x * movementSpeed * deltaTime;
         float yMovement = _verticalVelocity * deltaTime;
@@ -166,9 +165,8 @@ public class PlayerMovement : NetworkBehaviour
         
         _characterController.Move(movement);
     }
-
-    // TODO: Sync jump to the server.
-    private void Jump(InputAction.CallbackContext context)
+    
+    private void Jump()
     {
         if (_characterController.isGrounded)
         {
