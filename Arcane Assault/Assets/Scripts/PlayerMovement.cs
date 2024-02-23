@@ -37,7 +37,7 @@ public class PlayerMovement : NetworkBehaviour
     private void Awake()
     {
         _characterController = gameObject.GetComponent<CharacterController>();
-        _playerCamera = gameObject.GetComponentInChildren<Camera>();
+        _playerCamera = gameObject.GetComponentInChildren<Camera>(true);
 
         _playerInputActions = new PlayerInputActions();
     }
