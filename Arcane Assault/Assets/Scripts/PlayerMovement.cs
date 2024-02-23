@@ -51,14 +51,14 @@ public class PlayerMovement : NetworkBehaviour
         _movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
         _cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
         
-        UpdateGravity();
+        HalfApplyGravity();
         MoveCamera();
         MovePlayer();
-        UpdateGravity();
+        HalfApplyGravity();
     }
 
     // Must be called before and after updating position.
-    private void UpdateGravity()
+    private void HalfApplyGravity()
     {
         _verticalVelocity += gravity * Time.deltaTime * 0.5f;
         if (_characterController.isGrounded && _verticalVelocity < 0)
