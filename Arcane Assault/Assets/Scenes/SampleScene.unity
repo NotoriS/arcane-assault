@@ -982,7 +982,7 @@ MonoBehaviour:
       type: 3}
     Prefabs:
       NetworkPrefabsLists: []
-    TickRate: 64
+    TickRate: 128
     ClientConnectionBufferTimeout: 10
     ConnectionApproval: 0
     ConnectionData: 

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 
 public class PlayerMovement : NetworkBehaviour
 {
@@ -46,6 +48,8 @@ public class PlayerMovement : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         OnEnable();
+        if (IsOwner)
+            gameObject.GetComponent<NetworkTransform>().enabled = false;
     }
 
     private void OnEnable()
@@ -66,18 +70,19 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner || IsServer) return;
+        if (IsOwner && !IsServer) // Owner client
+        {
+            Vector2 movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
+            Vector2 cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
+            bool jumpInput = _playerInputActions.Player.Jump.WasPerformedThisFrame();
         
-        Vector2 movementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
-        Vector2 cameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
-        bool jumpInput = _playerInputActions.Player.Jump.WasPerformedThisFrame();
+            Move(Time.deltaTime, movementInput, cameraInput, jumpInput);
+            PlayerPositionState currentState =
+                new PlayerPositionState(transform.position, _horizontalRotation, _verticalRotation);
+            _clientSidePredictionHistory.Add(currentState);
         
-        Move(Time.deltaTime, movementInput, cameraInput, jumpInput);
-        PlayerPositionState currentState =
-            new PlayerPositionState(transform.position, _horizontalRotation, _verticalRotation);
-        _clientSidePredictionHistory.Add(currentState);
-        
-        MoveServerRpc(Time.deltaTime, movementInput, cameraInput, jumpInput);
+            MoveServerRpc(Time.deltaTime, movementInput, cameraInput, jumpInput);
+        }
     }
 
     private void Move(float deltaTime, Vector2 movementInput, Vector2 cameraInput, bool jumpInput)
@@ -122,13 +127,6 @@ public class PlayerMovement : NetworkBehaviour
             
             transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
             _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
-        }
-        else
-        {
-            transform.position = position;
-            
-            transform.rotation = Quaternion.Euler(0, horizontalRotation, 0);
-            _playerCamera.transform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
         }
     }
 
