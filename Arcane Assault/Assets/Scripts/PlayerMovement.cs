@@ -134,9 +134,9 @@ public class PlayerMovement : NetworkBehaviour
     private void HalfApplyGravity(float deltaTime)
     {
         _verticalVelocity += gravity * deltaTime * 0.5f;
-        if (_characterController.isGrounded && _verticalVelocity < 0)
+        if (_characterController.isGrounded && _verticalVelocity <= 0)
         {
-            _verticalVelocity = gravity * deltaTime * 0.5f;
+            _verticalVelocity = _characterController.stepOffset; // TODO: fix inconsisten jumping
         }
     }
 
