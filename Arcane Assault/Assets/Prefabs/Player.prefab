@@ -267,6 +267,7 @@ MonoBehaviour:
   mouseSensitivity: 0.2
   jumpVelocity: 5
   gravity: -9.81
+  groundCheckPadding: 0.01
 --- !u!114 &6694059005971626198
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -14,9 +14,10 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float mouseSensitivity = 1f;
     [SerializeField] private float jumpVelocity = 5f;
     [SerializeField] private float gravity = -9.81f;
+    [SerializeField] private float groundCheckPadding = 0.01f;
 
     private float _verticalVelocity;
-    
+
     private float _horizontalRotation;
     private float _verticalRotation;
 
@@ -136,7 +137,7 @@ public class PlayerMovement : NetworkBehaviour
         _verticalVelocity += gravity * deltaTime * 0.5f;
         if (_characterController.isGrounded && _verticalVelocity <= 0)
         {
-            _verticalVelocity = _characterController.stepOffset; // TODO: fix inconsisten jumping
+            _verticalVelocity = 0;
         }
     }
 
@@ -166,9 +167,16 @@ public class PlayerMovement : NetworkBehaviour
     
     private void Jump()
     {
-        if (_characterController.isGrounded)
+        if (IsGrounded())
         {
             _verticalVelocity += jumpVelocity;
         }
+    }
+
+    private bool IsGrounded()
+    {
+        Vector3 castOrigin = transform.position + new Vector3(0, 1, 0);
+        float maxDistance = 1f + groundCheckPadding;
+        return Physics.Raycast(castOrigin, -transform.up, maxDistance);
     }
 }
