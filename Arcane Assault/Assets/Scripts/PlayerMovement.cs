@@ -98,37 +98,41 @@ public class PlayerMovement : NetworkBehaviour
     private void MoveServerRpc(float deltaTime, Vector2 movementInput, Vector2 cameraInput, bool jumpInput)
     {
         Move(deltaTime, movementInput, cameraInput, jumpInput);
-        MoveClientRpc(transform.position, _horizontalRotation, _verticalRotation);
-    }
-    
-    [ClientRpc]
-    private void MoveClientRpc(Vector3 position, float horizontalRotation, float verticalRotation)
-    {
-        if (IsOwner)
+        ClientRpcParams rpcParams = new ClientRpcParams
         {
-            if (_clientSidePredictionHistory.Count <= 0) return;
-            PlayerPositionState prediction = _clientSidePredictionHistory[0];
-            _clientSidePredictionHistory.RemoveAt(0);
-
-            Vector3 positionPredictionError = position - prediction.Position;
-            transform.position += positionPredictionError;
-
-            float hrPredictionError = horizontalRotation - prediction.HorizontalRotation;
-            _horizontalRotation += hrPredictionError;
-
-            float vrPredictionError = verticalRotation - prediction.VerticalRotation;
-            _verticalRotation += vrPredictionError;
-            
-            foreach (PlayerPositionState p in _clientSidePredictionHistory)
+            Send = new ClientRpcSendParams
             {
-                p.Position += positionPredictionError;
-                p.HorizontalRotation += hrPredictionError;
-                p.VerticalRotation += vrPredictionError;
+                TargetClientIds = new ulong[] { OwnerClientId }
             }
+        };
+        ReconciliationClientRpc(transform.position, _horizontalRotation, _verticalRotation, rpcParams);
+    }
+
+    [ClientRpc]
+    private void ReconciliationClientRpc(Vector3 position, float horizontalRotation, float verticalRotation, ClientRpcParams rpcParams)
+    {
+        if (_clientSidePredictionHistory.Count <= 0) return;
+        PlayerPositionState prediction = _clientSidePredictionHistory[0];
+        _clientSidePredictionHistory.RemoveAt(0);
+
+        Vector3 positionPredictionError = position - prediction.Position;
+        transform.position += positionPredictionError;
+
+        float hrPredictionError = horizontalRotation - prediction.HorizontalRotation;
+        _horizontalRotation += hrPredictionError;
+
+        float vrPredictionError = verticalRotation - prediction.VerticalRotation;
+        _verticalRotation += vrPredictionError;
             
-            transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
-            _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
+        foreach (PlayerPositionState p in _clientSidePredictionHistory)
+        {
+            p.Position += positionPredictionError;
+            p.HorizontalRotation += hrPredictionError;
+            p.VerticalRotation += vrPredictionError;
         }
+            
+        transform.rotation = Quaternion.Euler(0, _horizontalRotation, 0);
+        _playerCamera.transform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
     }
 
     // Must be called before and after updating position.
