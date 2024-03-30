@@ -10,6 +10,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         public float Horizontal;
         public float Vertical;
+        public bool JumpPressed;
 
         private uint _tick;
         public void Dispose() { }
@@ -20,10 +21,12 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         public Vector3 Position;
         public Quaternion Rotation;
-        public ReconcileData(Vector3 position, Quaternion rotation)
+        public float VerticalVelocity;
+        public ReconcileData(Vector3 position, Quaternion rotation, float verticalVelocity)
         {
             Position = position;
             Rotation = rotation;
+            VerticalVelocity = verticalVelocity;
             _tick = 0;
         }
 
@@ -33,8 +36,12 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         public void SetTick(uint value) => _tick = value;
     }
 
-    [SerializeField]
-    private float _moveRate = 5f;
+    [SerializeField] private float moveRate = 5f;
+    [SerializeField] private float gravity = -9.81f;
+    [SerializeField] private float jumpVelocity = 5f;
+    [SerializeField] private float groundCheckPadding = 0.01f;
+
+    private float _verticalVelocity = 0;
 
     private CharacterController _characterController;
     private PlayerInput _playerInput;
@@ -61,6 +68,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
     private void TimeManager_OnTick()
     {
+        HalfApplyGravity();
         if (base.IsOwner)
         {
             Reconciliation(default, false);
@@ -70,9 +78,10 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         if (base.IsServer)
         {
             Move(default, true);
-            ReconcileData rd = new ReconcileData(transform.position, transform.rotation);
+            ReconcileData rd = new ReconcileData(transform.position, transform.rotation, _verticalVelocity);
             Reconciliation(rd, true);
         }
+        HalfApplyGravity();
     }
 
     private void CheckInput(out MoveData md)
@@ -82,21 +91,30 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         float horizontal = _playerInput.MovementInput.x;
         float vertical = _playerInput.MovementInput.y;
 
+        bool jumpPressed = _playerInput.JumpQueued;
+        _playerInput.JumpQueued = false;
+
+        /*
+         * Doesn't work well with gravity like this.
+         * 
         if (horizontal == 0f && vertical == 0f)
             return;
+        */
 
         md = new MoveData()
         {
             Horizontal = horizontal,
-            Vertical = vertical
+            Vertical = vertical,
+            JumpPressed = jumpPressed
         };
     }
 
     [Replicate]
     private void Move(MoveData md, bool asServer, Channel channel = Channel.Unreliable, bool replaying = false)
     {
-        Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized + new Vector3(0f, Physics.gravity.y, 0f);
-        _characterController.Move(move * _moveRate * (float)base.TimeManager.TickDelta);
+        if (md.JumpPressed) Jump();
+        Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
+        _characterController.Move(move * (float)base.TimeManager.TickDelta);
     }
 
     [Reconcile]
@@ -104,5 +122,31 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         transform.position = rd.Position;
         transform.rotation = rd.Rotation;
+        _verticalVelocity = rd.VerticalVelocity;
+    }
+
+    private void Jump()
+    {
+        if (IsGrounded())
+        {
+            _verticalVelocity = jumpVelocity;
+        }
+    }
+
+    private bool IsGrounded()
+    {
+        Vector3 castOrigin = transform.position + new Vector3(0, 1, 0);
+        float maxDistance = 1f + groundCheckPadding;
+        return Physics.Raycast(castOrigin, -transform.up, maxDistance);
+    }
+
+    // Must be called before and after updating position.
+    private void HalfApplyGravity()
+    {
+        _verticalVelocity += gravity * (float)base.TimeManager.TickDelta * 0.5f;
+        if (_characterController.isGrounded && _verticalVelocity <= 0)
+        {
+            _verticalVelocity = 0;
+        }
     }
 }
