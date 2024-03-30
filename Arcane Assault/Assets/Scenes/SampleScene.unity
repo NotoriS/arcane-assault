@@ -263,7 +263,7 @@ MonoBehaviour:
   _timingType: 0
   _allowTickDropping: 0
   _maximumFrameTicks: 2
-  _tickRate: 30
+  _tickRate: 128
   _pingInterval: 1
   _physicsMode: 1
 --- !u!1 &597937540
@@ -384,12 +384,12 @@ GameObject:
   - component: {fileID: 717367302}
   - component: {fileID: 717367301}
   m_Layer: 0
-  m_Name: Camera
+  m_Name: Server Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &717367301
 MonoBehaviour:
   m_ObjectHideFlags: 0

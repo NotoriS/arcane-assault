@@ -4,7 +4,7 @@ using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
 
-public class CharacterControllerPrediction : NetworkBehaviour
+public class SynchronizedPlayerMovement : NetworkBehaviour
 {
     public struct MoveData : IReplicateData
     {
