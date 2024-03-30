@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerInput : NetworkBehaviour
 {
     public Vector2 MovementInput { get; private set; }
-    public Vector2 CameraInput { get; private set; }
+    public Vector2 LookInput { get; private set; }
     public bool JumpQueued { get; set; }
 
     private PlayerInputActions _playerInputActions;
@@ -41,7 +41,7 @@ public class PlayerInput : NetworkBehaviour
         if (!base.IsOwner) return;
 
         MovementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
-        CameraInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
+        LookInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
         JumpQueued |= _playerInputActions.Player.Jump.WasPerformedThisFrame();
     }
 }

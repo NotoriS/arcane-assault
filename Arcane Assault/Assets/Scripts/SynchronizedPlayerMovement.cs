@@ -11,6 +11,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         public float Horizontal;
         public float Vertical;
         public bool JumpPressed;
+        public float CurrentRotation;
 
         private uint _tick;
         public void Dispose() { }
@@ -45,12 +46,14 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
     private CharacterController _characterController;
     private PlayerInput _playerInput;
+    private PlayerLook _playerLook;
 
     private void Awake()
     {
         InstanceFinder.TimeManager.OnTick += TimeManager_OnTick;
         _characterController = GetComponent<CharacterController>();
         _playerInput = GetComponent<PlayerInput>();
+        _playerLook = GetComponent<PlayerLook>();
     }
 
     public override void OnStartClient()
@@ -100,12 +103,13 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         if (horizontal == 0f && vertical == 0f)
             return;
         */
-
+        
         md = new MoveData()
         {
             Horizontal = horizontal,
             Vertical = vertical,
-            JumpPressed = jumpPressed
+            JumpPressed = jumpPressed,
+            CurrentRotation = _playerLook.Rotation
         };
     }
 
@@ -113,7 +117,11 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     private void Move(MoveData md, bool asServer, Channel channel = Channel.Unreliable, bool replaying = false)
     {
         if (md.JumpPressed) Jump();
+
+        transform.rotation = Quaternion.Euler(0, md.CurrentRotation, 0);
         Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
+        move = transform.TransformDirection(move);
+
         _characterController.Move(move * (float)base.TimeManager.TickDelta);
     }
 

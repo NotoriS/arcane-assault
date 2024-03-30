@@ -151,7 +151,8 @@ GameObject:
   - component: {fileID: 7289253865052168008}
   - component: {fileID: 8012731120496982188}
   - component: {fileID: 6136734427637756918}
-  - component: {fileID: 5724500210973539213}
+  - component: {fileID: 7418642136657631898}
+  - component: {fileID: 7091157268885946472}
   - component: {fileID: 3909656311601562100}
   m_Layer: 0
   m_Name: Player
@@ -221,7 +222,9 @@ MonoBehaviour:
   _networkBehaviours:
   - {fileID: 7289253865052168008}
   - {fileID: 8012731120496982188}
-  - {fileID: 5724500210973539213}
+  - {fileID: 6136734427637756918}
+  - {fileID: 7418642136657631898}
+  - {fileID: 7091157268885946472}
   - {fileID: 3909656311601562100}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
@@ -302,8 +305,8 @@ MonoBehaviour:
     Position: 1
     Rotation: 1
     Scale: 0
-  _interpolation: 2
-  _extrapolation: 2
+  _interpolation: 1
+  _extrapolation: 0
   _enableTeleport: 0
   _teleportThreshold: 1
   _scaleThreshold: 1
@@ -338,10 +341,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c445578df1ea74d4ea0f1c48e3fc6a74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 8009351447838745879}
-  _networkObjectCache: {fileID: 0}
---- !u!114 &5724500210973539213
+  _networkObjectCache: {fileID: 8009351447838745879}
+--- !u!114 &7418642136657631898
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -353,10 +356,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63a3022427c9f854e8238819d1bfdc81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 2
+  _componentIndexCache: 3
   _addedNetworkObject: {fileID: 8009351447838745879}
   _networkObjectCache: {fileID: 8009351447838745879}
-  _moveRate: 5
+  moveRate: 3
+  gravity: -9.81
+  jumpVelocity: 5
+  groundCheckPadding: 0.01
+--- !u!114 &7091157268885946472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7184815173064040344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d860ce81db7de354bbaf6d4b96ca3c04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 4
+  _addedNetworkObject: {fileID: 8009351447838745879}
+  _networkObjectCache: {fileID: 8009351447838745879}
+  mouseSensitivity: 0.2
 --- !u!114 &3909656311601562100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -369,7 +391,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 660c36e6d03b3f04eb05077183037086, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 3
+  _componentIndexCache: 5
   _addedNetworkObject: {fileID: 8009351447838745879}
   _networkObjectCache: {fileID: 8009351447838745879}
   objects:
