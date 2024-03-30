@@ -37,11 +37,13 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     private float _moveRate = 5f;
 
     private CharacterController _characterController;
+    private PlayerInput _playerInput;
 
     private void Awake()
     {
         InstanceFinder.TimeManager.OnTick += TimeManager_OnTick;
         _characterController = GetComponent<CharacterController>();
+        _playerInput = GetComponent<PlayerInput>();
     }
 
     public override void OnStartClient()
@@ -77,8 +79,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         md = default;
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        float horizontal = _playerInput.MovementInput.x;
+        float vertical = _playerInput.MovementInput.y;
 
         if (horizontal == 0f && vertical == 0f)
             return;
