@@ -10,6 +10,8 @@ public class BasicAttack : NetworkBehaviour
 
     private PlayerInput _playerInput;
 
+    private const float MAXIMUM_LATENCY_COMPENSATION = 0.3f;
+
     private void Awake()
     {
         _playerInput = GetComponent<PlayerInput>();
@@ -37,6 +39,7 @@ public class BasicAttack : NetworkBehaviour
         {
             GameObject spell = Instantiate(spellPrefab, spawnPoint.position, direction);
             float latency = (float)TimeManager.TimePassed(tick, false);
+            latency = Mathf.Min(latency, MAXIMUM_LATENCY_COMPENSATION / 2f);
             spell.GetComponent<SpellMovement>().Initialize(camPosition, latency);
         }
 
@@ -48,6 +51,7 @@ public class BasicAttack : NetworkBehaviour
     {
         GameObject spell = Instantiate(spellPrefab, spawnPoint.position, direction);
         float latency = (float)TimeManager.TimePassed(tick, false);
+        latency = Mathf.Min(latency, MAXIMUM_LATENCY_COMPENSATION);
         spell.GetComponent<SpellMovement>().Initialize(camPosition, latency);
     }
 }
