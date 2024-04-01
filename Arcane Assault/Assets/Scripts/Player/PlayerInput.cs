@@ -6,6 +6,7 @@ public class PlayerInput : NetworkBehaviour
     public Vector2 MovementInput { get; private set; }
     public Vector2 LookInput { get; private set; }
     public bool JumpQueued { get; set; }
+    public bool BasicAttacked { get; private set; }
 
     private PlayerInputActions _playerInputActions;
 
@@ -43,5 +44,6 @@ public class PlayerInput : NetworkBehaviour
         MovementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
         LookInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
         JumpQueued |= _playerInputActions.Player.Jump.WasPerformedThisFrame();
+        BasicAttacked = _playerInputActions.Player.BasicAttack.WasPerformedThisFrame();
     }
 }
