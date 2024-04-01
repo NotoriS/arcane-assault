@@ -16,7 +16,7 @@ public class SpellMovement : MonoBehaviour
 
     private float _timeAlive;
 
-    public void Initialize(Vector3 cameraPosition)
+    public void Initialize(Vector3 cameraPosition, float latency = 0f)
     {
         _moveDirection = transform.forward;
 
@@ -35,7 +35,7 @@ public class SpellMovement : MonoBehaviour
         if (_timeAlive > maxLifetime) Destroy(gameObject);
 
         transform.position += CalculateShiftThisFrame();
-        transform.position += _moveDirection * forwardVelocity * Time.deltaTime;
+        transform.position += _moveDirection * (forwardVelocity * Time.deltaTime);
     }
 
     // Determine the distance to shift toward the target line this frame

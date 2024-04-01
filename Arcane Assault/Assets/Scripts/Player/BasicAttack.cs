@@ -1,12 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class BasicAttack : MonoBehaviour
+public class BasicAttack : NetworkBehaviour
 {
     [SerializeField] private GameObject spellPrefab;
     [SerializeField] private Transform spawnPoint;
-    [SerializeField] private Transform cameraTrasform;
+    [SerializeField] private Transform cameraTransform;
 
     private PlayerInput _playerInput;
 
@@ -19,8 +19,35 @@ public class BasicAttack : MonoBehaviour
     {
         if (_playerInput.BasicAttacked)
         {
-            GameObject spell = Instantiate(spellPrefab, spawnPoint.position, cameraTrasform.rotation);
-            spell.GetComponent<SpellMovement>().Initialize(cameraTrasform.position);
+            Fire();
         }
+    }
+
+    private void Fire()
+    {
+        GameObject spell = Instantiate(spellPrefab, spawnPoint.position, cameraTransform.rotation);
+        spell.GetComponent<SpellMovement>().Initialize(cameraTransform.position);
+        ServerFire(cameraTransform.position, cameraTransform.rotation, TimeManager.Tick);
+    }
+    
+    [ServerRpc]
+    private void ServerFire(Vector3 camPosition, Quaternion direction, uint tick)
+    {
+        if (!base.IsOwner)
+        {
+            GameObject spell = Instantiate(spellPrefab, spawnPoint.position, direction);
+            float latency = (float)TimeManager.TimePassed(tick, false);
+            spell.GetComponent<SpellMovement>().Initialize(camPosition, latency);
+        }
+
+        ObserversFire(camPosition, direction, tick);
+    }
+
+    [ObserversRpc(ExcludeOwner = true, ExcludeServer = true)]
+    private void ObserversFire(Vector3 camPosition, Quaternion direction, uint tick)
+    {
+        GameObject spell = Instantiate(spellPrefab, spawnPoint.position, direction);
+        float latency = (float)TimeManager.TimePassed(tick, false);
+        spell.GetComponent<SpellMovement>().Initialize(camPosition, latency);
     }
 }

@@ -249,6 +249,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NetworkObserver: {fileID: 0}
+  <PrefabId>k__BackingField: 0
+  <SpawnableCollectionId>k__BackingField: 0
+  _scenePathHash: 0
+  <SceneId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 7807759643866311769
   <IsNested>k__BackingField: 0
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
@@ -259,6 +265,7 @@ MonoBehaviour:
   - {fileID: 7418642136657631898}
   - {fileID: 7091157268885946472}
   - {fileID: 3909656311601562100}
+  - {fileID: 4931253060862539917}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
   SerializedTransformProperties:
@@ -269,12 +276,6 @@ MonoBehaviour:
   _isGlobal: 0
   _initializeOrder: 0
   _defaultDespawnType: 0
-  NetworkObserver: {fileID: 0}
-  <PrefabId>k__BackingField: 0
-  <SpawnableCollectionId>k__BackingField: 0
-  _scenePathHash: 0
-  <SceneId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 7807759643866311769
 --- !u!114 &7289253865052168008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -442,10 +443,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c7647003dcfbb34597360ca50c74f47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 6
+  _addedNetworkObject: {fileID: 8009351447838745879}
+  _networkObjectCache: {fileID: 8009351447838745879}
   spellPrefab: {fileID: 6703905459785335241, guid: 19921deaa4b34354ca41a0a17b7bff14,
     type: 3}
   spawnPoint: {fileID: 8762928527874273855}
-  cameraTrasform: {fileID: 6831148976855113802}
+  cameraTransform: {fileID: 6831148976855113802}
 --- !u!1001 &646346742133540313
 PrefabInstance:
   m_ObjectHideFlags: 0
