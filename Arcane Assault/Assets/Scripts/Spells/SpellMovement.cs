@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SpellMovement : MonoBehaviour
@@ -15,9 +13,13 @@ public class SpellMovement : MonoBehaviour
     private Vector3 _lerpProgress;
 
     private float _timeAlive;
+    
+    private float _catchupTimeRemaining;
+    private float _catchupTimeThisFrame;
 
     public void Initialize(Vector3 cameraPosition, float latency = 0f)
     {
+        _catchupTimeRemaining = latency;
         _moveDirection = transform.forward;
 
         // Find point on the target line that is perpendicular to the camera and spawn point
@@ -31,11 +33,32 @@ public class SpellMovement : MonoBehaviour
 
     private void Update()
     {
-        _timeAlive += Time.deltaTime;
+        UpdateCatchupTime();
+        float delta = Time.deltaTime + _catchupTimeThisFrame;
+        _timeAlive += delta;
         if (_timeAlive > maxLifetime) Destroy(gameObject);
-
+        
         transform.position += CalculateShiftThisFrame();
-        transform.position += _moveDirection * (forwardVelocity * Time.deltaTime);
+        transform.position += _moveDirection * (forwardVelocity * delta);
+    }
+
+    private void UpdateCatchupTime()
+    {
+        if (_catchupTimeRemaining <= 0f)
+        {
+            _catchupTimeThisFrame = 0f;
+            return;
+        }
+        
+        float step = (_catchupTimeRemaining * 0.08f);
+        _catchupTimeRemaining -= step;
+            
+        if (_catchupTimeRemaining <= (Time.deltaTime / 2f))
+        {
+            step += _catchupTimeRemaining;
+            _catchupTimeRemaining = 0f;
+        }
+        _catchupTimeThisFrame = step;
     }
 
     // Determine the distance to shift toward the target line this frame

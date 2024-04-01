@@ -1,6 +1,5 @@
 using FishNet.Object;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class BasicAttack : NetworkBehaviour
 {
