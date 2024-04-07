@@ -71,6 +71,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
     private void TimeManager_OnTick()
     {
+        if (!base.IsOwner && !base.IsServer) return;
+
         HalfApplyGravity();
         if (base.IsOwner)
         {
@@ -96,13 +98,6 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
         bool jumpPressed = _playerInput.JumpQueued;
         _playerInput.JumpQueued = false;
-
-        /*
-         * Doesn't work well with gravity like this.
-         * 
-        if (horizontal == 0f && vertical == 0f)
-            return;
-        */
         
         md = new MoveData()
         {
@@ -118,9 +113,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         if (md.JumpPressed) Jump();
 
-        transform.rotation = Quaternion.Euler(0, md.CurrentRotation, 0);
         Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
-        move = transform.TransformDirection(move);
+        move = Quaternion.Euler(0, md.CurrentRotation, 0) * move;
 
         _characterController.Move(move * (float)base.TimeManager.TickDelta);
     }
