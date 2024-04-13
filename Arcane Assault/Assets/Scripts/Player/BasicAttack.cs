@@ -28,11 +28,12 @@ public class BasicAttack : NetworkBehaviour
     {
         GameObject spell = Instantiate(spellPrefab, spawnPoint.position, cameraTransform.rotation);
         spell.GetComponent<SpellMovement>().Initialize(cameraTransform.position);
-        ServerFire(cameraTransform.position, cameraTransform.rotation, TimeManager.Tick);
+        spell.GetComponent<SpellDamage>().Initialize(base.OwnerId);
+        ServerFire(cameraTransform.position, cameraTransform.rotation, TimeManager.Tick, base.OwnerId);
     }
     
     [ServerRpc]
-    private void ServerFire(Vector3 camPosition, Quaternion direction, uint tick)
+    private void ServerFire(Vector3 camPosition, Quaternion direction, uint tick, int shooterId)
     {
         if (!base.IsOwner)
         {
@@ -40,17 +41,19 @@ public class BasicAttack : NetworkBehaviour
             float latency = (float)TimeManager.TimePassed(tick, false);
             latency = Mathf.Min(latency, MAXIMUM_LATENCY_COMPENSATION / 2f);
             spell.GetComponent<SpellMovement>().Initialize(camPosition, latency);
+            spell.GetComponent<SpellDamage>().Initialize(shooterId);
         }
 
-        ObserversFire(camPosition, direction, tick);
+        ObserversFire(camPosition, direction, tick, shooterId);
     }
 
     [ObserversRpc(ExcludeOwner = true, ExcludeServer = true)]
-    private void ObserversFire(Vector3 camPosition, Quaternion direction, uint tick)
+    private void ObserversFire(Vector3 camPosition, Quaternion direction, uint tick, int shooterId)
     {
         GameObject spell = Instantiate(spellPrefab, spawnPoint.position, direction);
         float latency = (float)TimeManager.TimePassed(tick, false);
         latency = Mathf.Min(latency, MAXIMUM_LATENCY_COMPENSATION);
         spell.GetComponent<SpellMovement>().Initialize(camPosition, latency);
+        spell.GetComponent<SpellDamage>().Initialize(shooterId);
     }
 }

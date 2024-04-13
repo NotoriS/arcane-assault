@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 2009944358856026736}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.52, y: -0.232, z: 1.005}
+  m_LocalPosition: {x: 0.222, y: -0.232, z: 0.423}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -289,6 +289,7 @@ GameObject:
   - component: {fileID: 7091157268885946472}
   - component: {fileID: 3909656311601562100}
   - component: {fileID: 4931253060862539917}
+  - component: {fileID: 248959491851319992}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -327,7 +328,7 @@ CharacterController:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
@@ -363,6 +364,7 @@ MonoBehaviour:
   - {fileID: 7091157268885946472}
   - {fileID: 3909656311601562100}
   - {fileID: 4931253060862539917}
+  - {fileID: 248959491851319992}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
   SerializedTransformProperties:
@@ -374,7 +376,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
-  <PrefabId>k__BackingField: 0
+  <PrefabId>k__BackingField: 6
   <SpawnableCollectionId>k__BackingField: 0
   _scenePathHash: 0
   <SceneId>k__BackingField: 0
@@ -554,6 +556,23 @@ MonoBehaviour:
     type: 3}
   spawnPoint: {fileID: 8762928527874273855}
   cameraTransform: {fileID: 6831148976855113802}
+--- !u!114 &248959491851319992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7184815173064040344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6082a265b05ee5527a29557c3972b90a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 7
+  _addedNetworkObject: {fileID: 8009351447838745879}
+  _networkObjectCache: {fileID: 8009351447838745879}
+  maxHealth: 100
+  _currentHealth: 0
 --- !u!1 &8807341004176903410
 GameObject:
   m_ObjectHideFlags: 0
