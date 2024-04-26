@@ -56,11 +56,6 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         _playerLook = GetComponent<PlayerLook>();
     }
 
-    public override void OnStartClient()
-    {
-        _characterController.enabled = (base.IsServer || base.IsOwner);
-    }
-
     private void OnDestroy()
     {
         if (InstanceFinder.TimeManager != null)
