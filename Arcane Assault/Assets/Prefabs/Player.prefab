@@ -359,6 +359,8 @@ MonoBehaviour:
   - {fileID: 6873110957267970130}
   - {fileID: 629077718831310026}
   - {fileID: 2910801265632248846}
+  - {fileID: 2589042961940586930}
+  - {fileID: 5741634812975781552}
   <SerializedRootNetworkBehaviour>k__BackingField: {fileID: 0}
   <NestedRootNetworkBehaviours>k__BackingField: []
   SerializedTransformProperties:
@@ -464,9 +466,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6082a265b05ee5527a29557c3972b90a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 3816660767559190648}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 3816660767559190648}
   maxHealth: 100
 --- !u!114 &5741634812975781552
 MonoBehaviour:
@@ -480,13 +482,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c7647003dcfbb34597360ca50c74f47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 5
   _addedNetworkObject: {fileID: 3816660767559190648}
-  _networkObjectCache: {fileID: 0}
-  spellPrefab: {fileID: 6703905459785335241, guid: 19921deaa4b34354ca41a0a17b7bff14,
+  _networkObjectCache: {fileID: 3816660767559190648}
+  spellPrefab: {fileID: 7330633388352762011, guid: 8b4e66a323d62c240874a658712ea5b7,
     type: 3}
   spawnPoint: {fileID: 8762928527874273855}
   cameraTransform: {fileID: 6831148976855113802}
+  arcRange: 0.5
+  arcTime: 10
 --- !u!1 &8807341004176903410
 GameObject:
   m_ObjectHideFlags: 0

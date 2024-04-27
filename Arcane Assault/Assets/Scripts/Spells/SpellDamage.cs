@@ -23,6 +23,6 @@ public class SpellDamage : MonoBehaviour
             damageable.Damage(spellDamage);
         }
 
-        Destroy(gameObject);
+        Destroy(transform.parent.gameObject);
     }
 }
