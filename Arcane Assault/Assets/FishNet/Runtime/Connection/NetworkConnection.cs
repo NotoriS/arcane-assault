@@ -13,6 +13,21 @@ using static FishNet.Managing.Timing.EstimatedTick;
 namespace FishNet.Connection
 {
 
+    public static class NetworkConnectionExtensions
+    {
+
+        /// <summary>
+        /// True if this connection is valid. An invalid connection indicates no client is set for this reference.
+        /// Null references can be used with this method.
+        /// </summary>
+        public static bool IsValid(this NetworkConnection c)
+        {
+            if (c == null)
+                return false;
+            else
+                return c.IsValid;
+        }
+    }
     /// <summary>
     /// A container for a connected client used to perform actions on and gather information for the declared client.
     /// </summary>
@@ -70,7 +85,13 @@ namespace FishNet.Connection
         /// <summary>
         /// True if this connection is authenticated. Only available to server.
         /// </summary>
-        public bool Authenticated { get; private set; }
+        public bool IsAuthenticated { get; private set; }
+        [Obsolete("Use IsAuthenticated.")] //Remove in V5
+        public bool Authenticated
+        {
+            get => IsAuthenticated;
+            set => IsAuthenticated = value;
+        }
         /// <summary>
         /// True if this connection IsValid and not Disconnecting.
         /// </summary>
@@ -101,11 +122,7 @@ namespace FishNet.Connection
             if (!Objects.Contains(nob))
             {
                 string errMessage = $"FirstObject for {ClientId} cannot be set to {nob.name} as it's not within Objects for this connection.";
-                if (NetworkManager == null)
-                    NetworkManager.StaticLogError(errMessage);
-                else
-                    NetworkManager.LogError(errMessage);
-
+                NetworkManager.LogError(errMessage);
                 return;
             }
 
@@ -136,14 +153,12 @@ namespace FishNet.Connection
         /// Tick of the last packet received from this connection which was not out of order.
         /// This value is only available on the server.
         /// </summary>
-        public EstimatedTick PacketTick;
-        [Obsolete("Use LocalTick instead.")] //Remove on 2023/06/01
-        public uint Tick => LocalTick.Value(NetworkManager.TimeManager);
+        public EstimatedTick PacketTick { get; private set; } = new EstimatedTick();
         /// <summary>
         /// Approximate local tick as it is on this connection.
         /// This also contains the last set value for local and remote.
         /// </summary>
-        public EstimatedTick LocalTick;
+        public EstimatedTick LocalTick { get; private set; } = new EstimatedTick();
         #endregion
 
         #region Const.
@@ -151,6 +166,22 @@ namespace FishNet.Connection
         /// Value used when ClientId has not been set.
         /// </summary>
         public const int UNSET_CLIENTID_VALUE = -1;
+        /// <summary>
+        /// Maximum value a ClientId can be.
+        /// </summary>
+        public const int MAXIMUM_CLIENTID_VALUE = int.MaxValue;
+        /// <summary>
+        /// Maximum value a ClientId can be excluding simulated value.
+        /// </summary>
+        public const int MAXIMUM_CLIENTID_WITHOUT_SIMULATED_VALUE = (int.MaxValue - 1);
+        /// <summary>
+        /// Value to use as a ClientId when simulating a local client without actually using a socket.
+        /// </summary>
+        public const int SIMULATED_CLIENTID_VALUE = int.MaxValue;
+        /// <summary>
+        /// Number of bytes to reserve for a connectionId if writing the value uncompressed.
+        /// </summary>
+        public const int CLIENTID_UNCOMPRESSED_RESERVE_LENGTH = 4;
         #endregion
 
         #region Comparers.
@@ -224,6 +255,8 @@ namespace FishNet.Connection
         private void Initialize(NetworkManager nm, int clientId, int transportIndex, bool asServer)
         {
             NetworkManager = nm;
+            LocalTick.Initialize(nm.TimeManager);
+            PacketTick.Initialize(nm.TimeManager);
             if (asServer)
                 ServerConnectionTick = nm.TimeManager.LocalTick;
             TransportIndex = transportIndex;
@@ -256,10 +289,11 @@ namespace FishNet.Connection
 
             ServerConnectionTick = 0;
             PacketTick.Reset();
+            LocalTick.Reset();
             TransportIndex = -1;
             ClientId = -1;
             ClearObjects();
-            Authenticated = false;
+            IsAuthenticated = false;
             NetworkManager = null;
             _loadedStartScenesAsClient = false;
             _loadedStartScenesAsServer = false;
@@ -293,8 +327,7 @@ namespace FishNet.Connection
         {
             if (!IsValid)
             {
-                //NetworkManager is likely null if invalid.
-                NetworkManager.StaticLogWarning($"Disconnect called on an invalid connection.");
+                NetworkManager.LogWarning($"Disconnect called on an invalid connection.");
                 return;
             }
             if (Disconnecting)
@@ -310,6 +343,18 @@ namespace FishNet.Connection
             //Otherwise mark dirty so server will push out any pending information, and then disconnect.
             else
                 ServerDirty();
+        }
+
+        private float _localTickUpdateTime = float.NegativeInfinity;
+        /// <summary>
+        /// Tries to update the LocalTick for this connection after a number of conditions are checked.
+        /// </summary>
+        internal void TryUpdateLocalTick(uint tick)
+        {
+            bool resetValue = (Time.time - _localTickUpdateTime) > 1f;
+            LocalTick.Update(tick, OldTickOption.Discard, resetValue);
+            if (resetValue)
+                _localTickUpdateTime = Time.time;
         }
 
         /// <summary>
@@ -336,7 +381,7 @@ namespace FishNet.Connection
         /// </summary>
         internal void ConnectionAuthenticated()
         {
-            Authenticated = true;
+            IsAuthenticated = true;
         }
 
         /// <summary>

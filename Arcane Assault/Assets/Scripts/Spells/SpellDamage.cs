@@ -15,14 +15,6 @@ public class SpellDamage : MonoBehaviour
     private void OnTriggerEnter(Collider collider)
     {
         NetworkObject networkObject = collider.gameObject.GetComponent<NetworkObject>();
-        //if (networkObject != null)
-        //{
-        //    Debug.Log($"{_spawnerId} : {networkObject.OwnerId}");
-        //}
-        //else 
-        //{ 
-        //    Debug.Log("null"); 
-        //}
         if (networkObject != null && networkObject.OwnerId == _spawnerId) return; // Hit self
 
         IDamageable damageable = collider.gameObject.GetComponent<IDamageable>();
@@ -31,7 +23,6 @@ public class SpellDamage : MonoBehaviour
             damageable.Damage(spellDamage);
         }
 
-        Debug.Log("Destroying");
         Destroy(gameObject);
     }
 }

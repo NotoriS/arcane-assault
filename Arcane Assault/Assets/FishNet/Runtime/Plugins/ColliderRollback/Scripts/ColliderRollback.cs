@@ -1,4 +1,5 @@
-﻿using FishNet.Object;
+﻿using FishNet.Managing;
+using FishNet.Object;
 using UnityEngine;
 
 namespace FishNet.Component.ColliderRollback
@@ -22,6 +23,7 @@ namespace FishNet.Component.ColliderRollback
         #endregion
 
         #region Serialized.
+#pragma warning disable CS0414
         /// <summary>
         /// How to configure the bounding box check.
         /// </summary>
@@ -46,6 +48,7 @@ namespace FishNet.Component.ColliderRollback
         [Tooltip("Objects holding colliders which can rollback.")]
         [SerializeField]
         private GameObject[] _colliderParents = new GameObject[0];
+#pragma warning restore CS0414
         #endregion
 
         

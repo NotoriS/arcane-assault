@@ -21,7 +21,7 @@ namespace FishNet.Demo.HashGrid
 
         private void Update()
         {
-            if (!base.IsOwner && !base.IsServer)
+            if (!base.IsOwner && !base.IsServerStarted)
                 return;
 
             transform.position = Vector3.MoveTowards(transform.position, _goal, (_moveRate * Time.deltaTime));

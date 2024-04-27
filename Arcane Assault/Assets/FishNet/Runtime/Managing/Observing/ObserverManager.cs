@@ -2,7 +2,7 @@
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Observing;
-using FishNet.Utility.Constant;
+using FishNet.Utility;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -31,7 +31,6 @@ namespace FishNet.Managing.Observing
         /// 
         /// </summary>
         [Tooltip("True to use the NetworkLOD system.")]
-        [FormerlySerializedAs("_useNetworkLod")]//Remove on 2024/01/01
         [SerializeField]
         private bool _enableNetworkLod;
         /// <summary>
@@ -51,13 +50,6 @@ namespace FishNet.Managing.Observing
         /// </summary>
         private List<float> _singleLevelOfDetailDistances = new List<float>() { float.MaxValue };
         /// <summary>
-        /// 
-        /// </summary>
-        [Tooltip("True to update visibility for clientHost based on if they are an observer or not.")]
-        [FormerlySerializedAs("_setHostVisibility")]//Remove on 2024/01/01
-        [SerializeField]
-        private bool _updateHostVisibility = true;
-        /// <summary>
         /// True to update visibility for clientHost based on if they are an observer or not.
         /// </summary>
         public bool UpdateHostVisibility
@@ -65,6 +57,26 @@ namespace FishNet.Managing.Observing
             get => _updateHostVisibility;
             private set => _updateHostVisibility = value;
         }
+        [Tooltip("True to update visibility for clientHost based on if they are an observer or not.")]
+        [SerializeField]
+        private bool _updateHostVisibility = true;
+        /// <summary>
+        /// Maximum duration the server will take to update timed observer conditions as server load increases. Lower values will result in timed conditions being checked quicker at the cost of performance..
+        /// </summary>
+        public float MaximumTimedObserversDuration
+        {
+            get => _maximumTimedObserversDuration;
+            private set => _maximumTimedObserversDuration = value;
+        }
+        [Tooltip("Maximum duration the server will take to update timed observer conditions as server load increases. Lower values will result in timed conditions being checked quicker at the cost of performance.")]
+        [SerializeField]
+        [Range(0f, 20f)]
+        private float _maximumTimedObserversDuration = 10f;
+        /// <summary>
+        /// Sets the MaximumTimedObserversDuration value.
+        /// </summary>
+        /// <param name="value">New maximum duration to update timed observers over.</param>
+        public void SetMaximumTimedObserversDuration(float value) => MaximumTimedObserversDuration = value;
         /// <summary>
         /// 
         /// </summary>
@@ -113,7 +125,7 @@ namespace FishNet.Managing.Observing
 
             /* If to update spawned as well then update all networkobservers
              * with the setting and also update renderers. */
-            if (_networkManager.IsServer && HostVisibilityUpdateContains(updateType, HostVisibilityUpdateTypes.Spawned))
+            if (_networkManager.IsServerStarted && HostVisibilityUpdateContains(updateType, HostVisibilityUpdateTypes.Spawned))
             {
                 NetworkConnection clientConn = _networkManager.ClientManager.Connection;
                 foreach (NetworkObject n in _networkManager.ServerManager.Objects.Spawned.Values)
@@ -235,7 +247,6 @@ namespace FishNet.Managing.Observing
         internal void CalculateLevelOfDetail(uint tick)
         {
             
-
             //If here then index is 0 and interval is every tick.
             LevelOfDetailIndex = 0;
         }

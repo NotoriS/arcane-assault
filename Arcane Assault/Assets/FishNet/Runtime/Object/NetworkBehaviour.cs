@@ -1,7 +1,8 @@
-﻿using FishNet.Documenting;
+﻿using FishNet.CodeGenerating;
+using FishNet.Documenting;
 using FishNet.Managing.Transporting;
 using FishNet.Serializing.Helping;
-using FishNet.Utility.Constant;
+using FishNet.Utility;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -76,6 +77,8 @@ namespace FishNet.Object
         }
 
 
+
+#if PREDICTION_1
         /// <summary>
         /// Preinitializes this script for the network.
         /// </summary>
@@ -94,10 +97,33 @@ namespace FishNet.Object
                 _initializedOnceClient = true;
             }
         }
+#else
+        /// <summary>
+        /// Preinitializes this script for the network.
+        /// </summary>
+        internal void Preinitialize_Internal(NetworkObject nob, bool asServer)
+        {
+            _transportManagerCache = nob.TransportManager;
+            
+            InitializeOnceSyncTypes(asServer);
+            if (asServer)
+            {
+                InitializeRpcLinks();
+                _initializedOnceServer = true;
+            }
+            else
+            {
+                if (!_initializedOnceClient && nob.EnablePrediction)
+                    nob.RegisterPredictionBehaviourOnce(this);
 
+                _initializedOnceClient = true;
+            }
+        }
+
+#endif
         internal void Deinitialize(bool asServer)
         {
-
+            SyncTypes_ResetState(asServer);
         }
 
         /// <summary>
@@ -122,7 +148,7 @@ namespace FishNet.Object
         /// <summary>
         /// Long name is to prevent users from potentially creating their own method named the same.
         /// </summary>
-        [CodegenMakePublic]
+        [MakePublic]
         [APIExclude]
         internal virtual void NetworkInitializeIfDisabled() { }
 
@@ -150,9 +176,12 @@ namespace FishNet.Object
         /// <summary>
         /// Resets this NetworkBehaviour so that it may be added to an object pool.
         /// </summary>
-        internal void ResetState()
+        public virtual void ResetState(bool asServer)
         {
-            SyncTypes_ResetState();
+            SyncTypes_ResetState(asServer);
+#if !PREDICTION_1
+            ResetPredictionTicks();
+#endif
             ClearReplicateCache();
             ClearBuffedRpcs();
         }
@@ -225,7 +254,7 @@ namespace FishNet.Object
 #endif
         }
 
-        #endregion
+#endregion
     }
 
 

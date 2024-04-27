@@ -13,6 +13,15 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         public bool JumpPressed;
         public float CurrentRotation;
 
+        public MoveData(float horizontal, float vertical, bool jumpPressed, float currentRotation)
+        {
+            Horizontal = horizontal;
+            Vertical = vertical;
+            JumpPressed = jumpPressed;
+            CurrentRotation = currentRotation;
+            _tick = 0;
+        }
+
         private uint _tick;
         public void Dispose() { }
         public uint GetTick() => _tick;
@@ -23,6 +32,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         public Vector3 Position;
         public Quaternion Rotation;
         public float VerticalVelocity;
+
         public ReconcileData(Vector3 position, Quaternion rotation, float verticalVelocity)
         {
             Position = position;
@@ -38,11 +48,10 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     }
 
     [SerializeField] private float moveRate = 5f;
-    [SerializeField] private float gravity = -9.81f;
     [SerializeField] private float jumpVelocity = 5f;
     [SerializeField] private float groundCheckPadding = 0.01f;
 
-    private float _verticalVelocity = 0;
+    private float _verticalVelocity;
 
     private CharacterController _characterController;
     private PlayerInput _playerInput;
@@ -50,63 +59,64 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
     private void Awake()
     {
-        InstanceFinder.TimeManager.OnTick += TimeManager_OnTick;
         _characterController = GetComponent<CharacterController>();
         _playerInput = GetComponent<PlayerInput>();
         _playerLook = GetComponent<PlayerLook>();
     }
 
-    private void OnDestroy()
+    public override void OnStartNetwork()
     {
-        if (InstanceFinder.TimeManager != null)
-        {
-            InstanceFinder.TimeManager.OnTick -= TimeManager_OnTick;
-        }
+        base.TimeManager.OnTick += TimeManager_OnTick;
+        base.TimeManager.OnPostTick += TimeManager_OnPostTick;
+    }
+
+    public override void OnStopNetwork()
+    {
+        base.TimeManager.OnTick -= TimeManager_OnTick;
+        base.TimeManager.OnPostTick -= TimeManager_OnPostTick;
     }
 
     private void TimeManager_OnTick()
     {
-        if (!base.IsOwner && !base.IsServer) return;
-
-        HalfApplyGravity();
-        if (base.IsOwner)
-        {
-            Reconciliation(default, false);
-            CheckInput(out MoveData md);
-            Move(md, false);
-        }
-        if (base.IsServer)
-        {
-            Move(default, true);
-            ReconcileData rd = new ReconcileData(transform.position, transform.rotation, _verticalVelocity);
-            Reconciliation(rd, true);
-        }
-        HalfApplyGravity();
+        Move(BuildMoveData());
     }
 
-    private void CheckInput(out MoveData md)
+    private void TimeManager_OnPostTick()
     {
-        md = default;
+        CreateReconcile();
+    }
+
+    private MoveData BuildMoveData()
+    {
+        if (!base.IsOwner)
+            return default;
 
         float horizontal = _playerInput.MovementInput.x;
         float vertical = _playerInput.MovementInput.y;
 
         bool jumpPressed = _playerInput.JumpQueued;
         _playerInput.JumpQueued = false;
-        
-        md = new MoveData()
+
+        float currentRotation = _playerLook.Rotation;
+
+        return new MoveData(horizontal, vertical, jumpPressed, currentRotation);
+    }
+
+    public override void CreateReconcile()
+    {
+        if (base.IsServerInitialized)
         {
-            Horizontal = horizontal,
-            Vertical = vertical,
-            JumpPressed = jumpPressed,
-            CurrentRotation = _playerLook.Rotation
-        };
+            ReconcileData rd = new ReconcileData(transform.position, transform.rotation, _verticalVelocity);
+            Reconciliation(rd);
+        }
     }
 
     [Replicate]
-    private void Move(MoveData md, bool asServer, Channel channel = Channel.Unreliable, bool replaying = false)
+    private void Move(MoveData md, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
     {
         if (md.JumpPressed) Jump();
+
+        ApplyGravity();
 
         Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
         move = Quaternion.Euler(0, md.CurrentRotation, 0) * move;
@@ -115,7 +125,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     }
 
     [Reconcile]
-    private void Reconciliation(ReconcileData rd, bool asServer, Channel channel = Channel.Unreliable)
+    private void Reconciliation(ReconcileData rd, Channel channel = Channel.Unreliable)
     {
         transform.position = rd.Position;
         transform.rotation = rd.Rotation;
@@ -137,13 +147,14 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         return Physics.Raycast(castOrigin, -transform.up, maxDistance);
     }
 
-    // Must be called before and after updating position.
-    private void HalfApplyGravity()
+    private void ApplyGravity()
     {
-        _verticalVelocity += gravity * (float)base.TimeManager.TickDelta * 0.5f;
-        if (_characterController.isGrounded && _verticalVelocity <= 0)
+        float stillVelocity = _characterController.stepOffset / -2f / (float)base.TimeManager.TickDelta;
+        _verticalVelocity += Physics.gravity.y * (float)base.TimeManager.TickDelta;
+
+        if (_characterController.isGrounded && _verticalVelocity <= stillVelocity)
         {
-            _verticalVelocity = 0;
+            _verticalVelocity = stillVelocity;
         }
     }
 }

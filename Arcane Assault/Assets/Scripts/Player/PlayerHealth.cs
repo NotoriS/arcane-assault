@@ -7,23 +7,23 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 {
     [SerializeField] private int maxHealth = 100;
 
-    [SyncVar(Channel = Channel.Unreliable, SendRate = 0f, OnChange = nameof(OnCurrentHealthChanged))]
-    private int _currentHealth;
+    private readonly SyncVar<int> _currentHealth = new();
 
     public override void OnStartServer()
     {
-        _currentHealth = maxHealth;
+        _currentHealth.Value = maxHealth;
+        _currentHealth.OnChange += OnCurrentHealthChanged;
     }
 
     public void Damage(int amount)
     {
-        if (!base.IsServer) return;
-        _currentHealth = Mathf.Max(_currentHealth - amount, 0);
+        if (!base.IsServerInitialized) return;
+        _currentHealth.Value = Mathf.Max(_currentHealth.Value - amount, 0);
     }
 
     private void OnCurrentHealthChanged(int prev, int next, bool asServer)
     {
-        if (asServer && !base.IsServerOnly) return;
-        Debug.Log($"Player #{base.OwnerId} Health: {_currentHealth}");
+        if (asServer && !base.IsServerOnlyInitialized) return;
+        Debug.Log($"Player #{base.OwnerId} Health: {_currentHealth.Value}");
     }
 }

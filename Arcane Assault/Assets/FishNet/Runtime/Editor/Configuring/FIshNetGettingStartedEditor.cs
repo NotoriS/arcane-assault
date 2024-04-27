@@ -21,11 +21,7 @@ namespace FishNet.Editing
             FishNetGettingStartedEditor window = (FishNetGettingStartedEditor)EditorWindow.GetWindow(typeof(FishNetGettingStartedEditor));
             window.position = new Rect(0, 0, 320, 355);
             Rect mainPos;
-#if UNITY_2020_1_OR_NEWER
             mainPos = EditorGUIUtility.GetMainWindowPosition();
-#else
-            mainPos = new Rect(Vector2.zero, Vector2.zero);
-#endif
             var pos = window.position;  
             float w = (mainPos.width - pos.width) * 0.5f;
             float h = (mainPos.height - pos.height) * 0.5f;
@@ -144,10 +140,10 @@ namespace FishNet.Editing
                 Application.OpenURL("https://www.firstgeargames.com/");
             }
 
-            if (GUILayout.Button("Examples", GUILayout.Width(this.position.width * 0.485f)))
-            {
-                Application.OpenURL("https://fish-networking.gitbook.io/docs/manual/tutorials/example-projects");
-            }
+            //if (GUILayout.Button("Examples", GUILayout.Width(this.position.width * 0.485f)))
+            //{
+            //    Application.OpenURL("https://fish-networking.gitbook.io/docs/manual/tutorials/example-projects");
+            //}
             EditorGUILayout.EndHorizontal();
 
             //GUILayout.Space(20);
