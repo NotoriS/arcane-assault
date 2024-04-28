@@ -11,7 +11,7 @@ public class PlayerLook : NetworkBehaviour
     public float CameraPitch { get; private set; }
 
     private PlayerInput _playerInput;
-    private Camera _playerCamera;
+    [SerializeField] private Transform playerCameraAnchor;
 
     private float _rotationSentLastTick;
     private float _cameraPitchSentLastTick;
@@ -20,13 +20,30 @@ public class PlayerLook : NetworkBehaviour
     {
         InstanceFinder.TimeManager.OnTick += TimeManager_OnTick;
         _playerInput = GetComponent<PlayerInput>();
-        _playerCamera = GetComponentInChildren<Camera>(true);
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        if (!base.IsOwner) enabled = false;
+        if (base.IsOwner)
+        {
+            GameObject cameraObj = GameObject.FindWithTag("MainCamera");
+            if (cameraObj == null) Debug.LogError("Unable to find main camera object.");
+            if (cameraObj.TryGetComponent<CameraFollow>(out CameraFollow camFollow))
+            {
+                camFollow.AnchorPoint = playerCameraAnchor;
+                camFollow.SnapCameraToAnchor();
+                camFollow.TickDelta = (float)base.TimeManager.TickDelta;
+            }
+            else
+            {
+                Debug.LogError("Unable to find CameraFollow component on main camera.");
+            }
+        }
+        else
+        {
+            enabled = false;
+        }
     }
 
     private void TimeManager_OnTick()
@@ -48,7 +65,7 @@ public class PlayerLook : NetworkBehaviour
         CameraPitch = Mathf.Clamp(CameraPitch, -90f, 90f);
 
         transform.rotation = Quaternion.Euler(0, Rotation, 0);
-        _playerCamera.transform.localRotation = Quaternion.Euler(CameraPitch, 0, 0);
+        playerCameraAnchor.localRotation = Quaternion.Euler(CameraPitch, 0, 0);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -56,6 +73,6 @@ public class PlayerLook : NetworkBehaviour
     {
         if (base.IsOwner) return;
         transform.rotation = Quaternion.Euler(0, rotation, 0);
-        _playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, 0, 0);
+        playerCameraAnchor.localRotation = Quaternion.Euler(cameraPitch, 0, 0);
     }
 }
