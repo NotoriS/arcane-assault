@@ -68,10 +68,19 @@ public class PlayerLook : NetworkBehaviour
         playerCameraAnchor.localRotation = Quaternion.Euler(CameraPitch, 0, 0);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void UpdateServerOrientation(float rotation, float cameraPitch, Channel channel = Channel.Reliable)
+    [ServerRpc]
+    private void UpdateServerOrientation(float rotation, float cameraPitch, Channel channel = Channel.Unreliable)
     {
+        UpdateObserverOrientation(rotation, cameraPitch);
         if (base.IsOwner) return;
+
+        transform.rotation = Quaternion.Euler(0, rotation, 0);
+        playerCameraAnchor.localRotation = Quaternion.Euler(cameraPitch, 0, 0);
+    }
+
+    [ObserversRpc(ExcludeOwner = true, ExcludeServer = true)]
+    private void UpdateObserverOrientation(float rotation, float cameraPitch, Channel channel = Channel.Unreliable)
+    {
         transform.rotation = Quaternion.Euler(0, rotation, 0);
         playerCameraAnchor.localRotation = Quaternion.Euler(cameraPitch, 0, 0);
     }

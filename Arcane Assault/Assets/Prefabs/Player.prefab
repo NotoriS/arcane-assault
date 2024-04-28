@@ -313,6 +313,7 @@ MonoBehaviour:
   moveRate: 5
   jumpVelocity: 5
   groundCheckPadding: 0.01
+  playerCameraAnchor: {fileID: 6831148976855113802}
 --- !u!114 &629077718831310026
 MonoBehaviour:
   m_ObjectHideFlags: 0

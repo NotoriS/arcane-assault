@@ -30,13 +30,11 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     public struct ReconcileData : IReconcileData
     {
         public Vector3 Position;
-        public Quaternion Rotation;
         public float VerticalVelocity;
 
-        public ReconcileData(Vector3 position, Quaternion rotation, float verticalVelocity)
+        public ReconcileData(Vector3 position, float verticalVelocity)
         {
             Position = position;
-            Rotation = rotation;
             VerticalVelocity = verticalVelocity;
             _tick = 0;
         }
@@ -106,7 +104,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         if (base.IsServerInitialized)
         {
-            ReconcileData rd = new ReconcileData(transform.position, transform.rotation, _verticalVelocity);
+            ReconcileData rd = new ReconcileData(transform.position, _verticalVelocity);
             Reconciliation(rd);
         }
     }
@@ -128,7 +126,6 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     private void Reconciliation(ReconcileData rd, Channel channel = Channel.Unreliable)
     {
         transform.position = rd.Position;
-        transform.rotation = rd.Rotation;
         _verticalVelocity = rd.VerticalVelocity;
     }
 
