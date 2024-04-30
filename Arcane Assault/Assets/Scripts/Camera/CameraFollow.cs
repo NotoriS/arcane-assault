@@ -13,7 +13,7 @@ public class CameraFollow : MonoBehaviour
 
     private void Update()
     {
-        if (AnchorPoint == null || TickDelta == 0f) return;
+        if (!AnchorPoint || TickDelta == 0f) return;
 
         if (_targetPosition != AnchorPoint.position)
         {
@@ -30,7 +30,7 @@ public class CameraFollow : MonoBehaviour
 
     public void SnapCameraToAnchor()
     {
-        if (AnchorPoint == null) return;
+        if (!AnchorPoint) return;
 
         _targetPosition = AnchorPoint.position;
         _prevTargetPosition = _targetPosition;

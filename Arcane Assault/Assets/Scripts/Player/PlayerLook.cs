@@ -28,7 +28,7 @@ public class PlayerLook : NetworkBehaviour
         if (base.IsOwner)
         {
             GameObject cameraObj = GameObject.FindWithTag("MainCamera");
-            if (cameraObj == null) Debug.LogError("Unable to find main camera object.");
+            if (!cameraObj) Debug.LogError("Unable to find main camera object.");
             if (cameraObj.TryGetComponent<CameraFollow>(out CameraFollow camFollow))
             {
                 camFollow.AnchorPoint = playerCameraAnchor;
