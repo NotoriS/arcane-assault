@@ -1,15 +1,16 @@
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
+using TMPro;
 using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour, IDamageable
 {
     [SerializeField] private int maxHealth = 100;
+    [SerializeField] private TextMeshProUGUI healthText;
 
     private readonly SyncVar<int> _currentHealth = new();
 
-    public override void OnStartServer()
+    public override void OnStartNetwork()
     {
         _currentHealth.Value = maxHealth;
         _currentHealth.OnChange += OnCurrentHealthChanged;
@@ -25,5 +26,6 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     {
         if (asServer && !base.IsServerOnlyInitialized) return;
         Debug.Log($"Player #{base.OwnerId} Health: {_currentHealth.Value}");
+        healthText.text = next.ToString();
     }
 }
