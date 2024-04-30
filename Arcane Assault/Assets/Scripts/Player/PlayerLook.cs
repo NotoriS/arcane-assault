@@ -29,10 +29,9 @@ public class PlayerLook : NetworkBehaviour
         {
             GameObject cameraObj = GameObject.FindWithTag("MainCamera");
             if (!cameraObj) Debug.LogError("Unable to find main camera object.");
-            if (cameraObj.TryGetComponent<CameraFollow>(out CameraFollow camFollow))
+            if (cameraObj.TryGetComponent(out CameraController camFollow))
             {
-                camFollow.AnchorPoint = playerCameraAnchor;
-                camFollow.SnapCameraToAnchor();
+                camFollow.SnapCameraToAnchor(playerCameraAnchor);
                 camFollow.TickDelta = (float)base.TimeManager.TickDelta;
             }
             else
