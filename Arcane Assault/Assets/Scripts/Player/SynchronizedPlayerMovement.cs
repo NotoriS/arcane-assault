@@ -55,6 +55,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     private CharacterController _characterController;
     private PlayerInput _playerInput;
     private PlayerLook _playerLook;
+    
+    public Vector3 Velocity { get; private set; }
 
     private void Awake()
     {
@@ -134,6 +136,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         move = Quaternion.Euler(0, md.CurrentRotation, 0) * move;
 
         _characterController.Move(move * (float)base.TimeManager.TickDelta);
+        Velocity = move;
     }
 
     [Reconcile]

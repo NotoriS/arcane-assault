@@ -16,7 +16,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 
     private readonly SyncVar<int> _currentHealth = new();
     private readonly List<Collider> _ragdollParts = new();
-
+    
     public event Action OnPlayerDeath;
 
     private void Awake()
@@ -84,6 +84,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         {
             c.isTrigger = false;
             c.attachedRigidbody.isKinematic = false;
+            c.attachedRigidbody.velocity = GetComponent<SynchronizedPlayerMovement>().Velocity;
         }
     }
 }
