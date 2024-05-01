@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PlayerInput : NetworkBehaviour
 {
+    private bool _controlsLocked;
+    
     public Vector2 MovementInput { get; private set; }
     public Vector2 LookInput { get; private set; }
     public bool JumpQueued { get; set; }
@@ -13,6 +15,7 @@ public class PlayerInput : NetworkBehaviour
     private void Awake()
     {
         _playerInputActions = new PlayerInputActions();
+        GetComponent<PlayerHealth>().OnPlayerDeath += LockControls;
     }
 
     public override void OnStartClient()
@@ -39,11 +42,26 @@ public class PlayerInput : NetworkBehaviour
 
     private void Update()
     {
-        if (!base.IsOwner) return;
+        if (!base.IsOwner || _controlsLocked) return;
 
         MovementInput = _playerInputActions.Player.PlayerMovement.ReadValue<Vector2>();
         LookInput = _playerInputActions.Player.CameraMovement.ReadValue<Vector2>();
         JumpQueued |= _playerInputActions.Player.Jump.WasPerformedThisFrame();
         BasicAttacked = _playerInputActions.Player.BasicAttack.WasPerformedThisFrame();
+    }
+
+    public void LockControls()
+    {
+        _controlsLocked = true;
+
+        MovementInput = Vector2.zero;
+        LookInput = Vector2.zero;
+        JumpQueued = false;
+        BasicAttacked = false;
+    }
+    
+    public void UnlockControls()
+    {
+        _controlsLocked = false;
     }
 }

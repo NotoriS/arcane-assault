@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using TMPro;
@@ -13,6 +15,14 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     [SerializeField] private float deathCamTransitionTime;
 
     private readonly SyncVar<int> _currentHealth = new();
+    private readonly List<Collider> _ragdollParts = new();
+
+    public event Action OnPlayerDeath;
+
+    private void Awake()
+    {
+        SetRagdollParts();
+    }
 
     public override void OnStartNetwork()
     {
@@ -38,11 +48,9 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 
     private void Kill()
     {
-        gameObject.GetComponent<CharacterController>().enabled = false;
-        gameObject.GetComponent<PlayerInput>().enabled = false;
-        
+        OnPlayerDeath?.Invoke();
         playerModel.SetActive(true);
-        // TODO: Ragdoll character model
+        EnableRagdoll();
         
         if (!base.IsOwner) return;
         
@@ -55,6 +63,27 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         else
         {
             Debug.LogError("Unable to find CameraFollow component on main camera.");
+        }
+    }
+
+    private void SetRagdollParts()
+    {
+        Collider[] colliders = playerModel.GetComponentsInChildren<Collider>();
+        foreach (Collider c in colliders)
+        {
+            c.isTrigger = true;
+            c.attachedRigidbody.isKinematic = true;
+            _ragdollParts.Add(c);
+        }
+    }
+
+    private void EnableRagdoll()
+    {
+        gameObject.GetComponent<CharacterController>().enabled = false;
+        foreach (Collider c in _ragdollParts)
+        {
+            c.isTrigger = false;
+            c.attachedRigidbody.isKinematic = false;
         }
     }
 }

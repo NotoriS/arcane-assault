@@ -1,5 +1,4 @@
-﻿using FishNet;
-using FishNet.Object;
+﻿using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
@@ -51,6 +50,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
     private float _verticalVelocity;
 
+    private bool _positionLocked;
+
     private CharacterController _characterController;
     private PlayerInput _playerInput;
     private PlayerLook _playerLook;
@@ -60,15 +61,27 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         _characterController = GetComponent<CharacterController>();
         _playerInput = GetComponent<PlayerInput>();
         _playerLook = GetComponent<PlayerLook>();
+        
+        GetComponent<PlayerHealth>().OnPlayerDeath += LockPosition;
     }
 
     public override void OnStartNetwork()
+    {
+        SubscribeToTickEvents();
+    }
+
+    public override void OnStopNetwork()
+    {
+        UnsubscribeFromTickEvents();
+    }
+
+    private void SubscribeToTickEvents()
     {
         base.TimeManager.OnTick += TimeManager_OnTick;
         base.TimeManager.OnPostTick += TimeManager_OnPostTick;
     }
 
-    public override void OnStopNetwork()
+    private void UnsubscribeFromTickEvents()
     {
         base.TimeManager.OnTick -= TimeManager_OnTick;
         base.TimeManager.OnPostTick -= TimeManager_OnPostTick;
@@ -112,8 +125,9 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     [Replicate]
     private void Move(MoveData md, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
     {
+        if (_positionLocked) return; // Might cause rubber banding on death
+        
         if (md.JumpPressed) Jump();
-
         ApplyGravity();
 
         Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
@@ -153,5 +167,15 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         {
             _verticalVelocity = stillVelocity;
         }
+    }
+
+    public void LockPosition()
+    {
+        _positionLocked = true;
+    }
+    
+    public void UnlockPosition()
+    {
+        _positionLocked = false;
     }
 }

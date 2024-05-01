@@ -11,6 +11,7 @@ public class PlayerLook : NetworkBehaviour
     public float CameraPitch { get; private set; }
 
     private PlayerInput _playerInput;
+    
     [SerializeField] private Transform playerCameraAnchor;
 
     private float _rotationSentLastTick;
