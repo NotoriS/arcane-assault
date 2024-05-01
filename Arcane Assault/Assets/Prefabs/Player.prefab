@@ -144,7 +144,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6831148976855113802}
   m_Layer: 0
-  m_Name: CameraAnchorPoint
+  m_Name: FirstPersonCamAnchorPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -338,6 +338,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6831148976855113802}
+  - {fileID: 5279906978633152864}
   - {fileID: 1113217669431337522}
   - {fileID: 8835550542107881782}
   m_Father: {fileID: 0}
@@ -500,6 +501,9 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 3816660767559190648}
   maxHealth: 100
   healthText: {fileID: 1740955756619498323}
+  playerModel: {fileID: 304311000441878664}
+  deathCamAnchorPoint: {fileID: 5279906978633152864}
+  deathCamTransitionTime: 1
 --- !u!114 &5741634812975781552
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -521,6 +525,51 @@ MonoBehaviour:
   cameraTransform: {fileID: 6831148976855113802}
   arcRange: 0.5
   arcTime: 10
+--- !u!1 &8608288561102241201
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5279906978633152864}
+  - component: {fileID: 1921837887569427359}
+  m_Layer: 0
+  m_Name: DeathCamAnchorPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5279906978633152864
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8608288561102241201}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.96, z: -1.06}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7256835694965525909}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1921837887569427359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8608288561102241201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90483a72df3a4753986b282e294ded49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  focusPoint: {fileID: 4837608574876828326}
 --- !u!1 &8807341004176903410
 GameObject:
   m_ObjectHideFlags: 0
@@ -683,6 +732,12 @@ GameObject:
 --- !u!4 &1113217669431337522 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a52f3c25962d2c4449b83216d3f75df7,
+    type: 3}
+  m_PrefabInstance: {fileID: 646346742133540313}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4837608574876828326 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5465940246521907071, guid: a52f3c25962d2c4449b83216d3f75df7,
     type: 3}
   m_PrefabInstance: {fileID: 646346742133540313}
   m_PrefabAsset: {fileID: 0}
