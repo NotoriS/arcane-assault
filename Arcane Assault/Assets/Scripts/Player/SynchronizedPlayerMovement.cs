@@ -1,23 +1,38 @@
-﻿using FishNet.Object;
+﻿using System.Collections.Generic;
+using System.Linq;
+using FishNet.CodeGenerating;
+using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using UnityEngine;
 
 public class SynchronizedPlayerMovement : NetworkBehaviour
 {
-    public struct MoveData : IReplicateData
+    public struct MoveData
     {
         public float Horizontal;
         public float Vertical;
         public bool JumpPressed;
         public float CurrentRotation;
+        public float Delta;
 
-        public MoveData(float horizontal, float vertical, bool jumpPressed, float currentRotation)
+        public MoveData(float horizontal, float vertical, bool jumpPressed, float currentRotation, float delta)
         {
             Horizontal = horizontal;
             Vertical = vertical;
             JumpPressed = jumpPressed;
             CurrentRotation = currentRotation;
+            Delta = delta;
+        }
+    }
+
+    public struct ReplicateData : IReplicateData
+    {
+        public MoveData[] Moves;
+
+        public ReplicateData(IEnumerable<MoveData> moves)
+        {
+            Moves = moves.ToArray();
             _tick = 0;
         }
 
@@ -48,8 +63,9 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     [SerializeField] private float jumpVelocity = 5f;
     [SerializeField] private float groundCheckPadding = 0.01f;
 
+    private Queue<MoveData> _movesSinceLastTick;
+    
     private float _verticalVelocity;
-
     private bool _positionLocked;
 
     private CharacterController _characterController;
@@ -65,11 +81,16 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         _playerLook = GetComponent<PlayerLook>();
         
         GetComponent<PlayerHealth>().OnPlayerDeath += LockPosition;
+
+        _movesSinceLastTick = new Queue<MoveData>();
+
+        _positionLocked = true;
     }
 
     public override void OnStartNetwork()
     {
         SubscribeToTickEvents();
+        _positionLocked = false;
     }
 
     public override void OnStopNetwork()
@@ -89,14 +110,12 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         base.TimeManager.OnPostTick -= TimeManager_OnPostTick;
     }
 
-    private void TimeManager_OnTick()
+    private void Update()
     {
-        Move(BuildMoveData());
-    }
-
-    private void TimeManager_OnPostTick()
-    {
-        CreateReconcile();
+        if (_positionLocked || !base.IsOwner) return;
+        MoveData md = BuildMoveData();
+        Move(md);
+        _movesSinceLastTick.Enqueue(BuildMoveData());
     }
 
     private MoveData BuildMoveData()
@@ -112,31 +131,61 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
         float currentRotation = _playerLook.Rotation;
 
-        return new MoveData(horizontal, vertical, jumpPressed, currentRotation);
+        return new MoveData(horizontal, vertical, jumpPressed, currentRotation, Time.deltaTime);
     }
 
-    public override void CreateReconcile()
+    private void Move(MoveData md)
     {
-        if (base.IsServerInitialized)
-        {
-            ReconcileData rd = new ReconcileData(transform.position, _verticalVelocity);
-            Reconciliation(rd);
-        }
-    }
-
-    [Replicate]
-    private void Move(MoveData md, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
-    {
-        if (_positionLocked) return; // Might cause rubber banding on death
-        
         if (md.JumpPressed) Jump();
-        ApplyGravity();
+        ApplyGravity(md.Delta);
 
         Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
         move = Quaternion.Euler(0, md.CurrentRotation, 0) * move;
 
-        _characterController.Move(move * (float)base.TimeManager.TickDelta);
+        _characterController.Move(move * md.Delta);
         Velocity = move;
+    }
+
+    private void TimeManager_OnTick()
+    {
+        if (_positionLocked) return;
+        ReplicatedMove(BuildReplicateData());
+    }
+
+    private void TimeManager_OnPostTick()
+    {
+        if (_positionLocked) return;
+        CreateReconcile();
+    }
+
+    private ReplicateData BuildReplicateData()
+    {
+        if (!base.IsOwner)
+            return default;
+
+        ReplicateData rd = new(_movesSinceLastTick);
+        _movesSinceLastTick = new Queue<MoveData>();
+        return rd;
+    }
+
+    public override void CreateReconcile()
+    {
+        if (!base.IsServerInitialized) return;
+        ReconcileData rd = new ReconcileData(transform.position, _verticalVelocity);
+        Reconciliation(rd);
+    }
+
+    [Replicate]
+    private void ReplicatedMove(ReplicateData rd, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
+    {
+        // Prevents the owning client moving unless they are replaying
+        if (state == ReplicateState.CurrentCreated && base.IsOwner) return;
+        
+        if (rd.Moves == null) return;
+        foreach (MoveData md in rd.Moves)
+        {
+            Move(md);
+        }
     }
 
     [Reconcile]
@@ -161,10 +210,10 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         return Physics.Raycast(castOrigin, -transform.up, maxDistance, LayerMask.NameToLayer("PlayerModel"));
     }
 
-    private void ApplyGravity()
+    private void ApplyGravity(float deltaTime)
     {
-        float stillVelocity = _characterController.stepOffset / -2f / (float)base.TimeManager.TickDelta;
-        _verticalVelocity += Physics.gravity.y * (float)base.TimeManager.TickDelta;
+        float stillVelocity = _characterController.stepOffset / -2f / deltaTime;
+        _verticalVelocity += Physics.gravity.y * deltaTime;
 
         if (_characterController.isGrounded && _verticalVelocity <= stillVelocity)
         {
@@ -180,5 +229,30 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     public void UnlockPosition()
     {
         _positionLocked = false;
+    }
+    
+    [CustomComparer]
+    public static bool CompareMoveDataArray(MoveData[] a, MoveData[] b)
+    {
+        bool aNull = (a is null);
+        bool bNull = (b is null);
+            
+        if (aNull && bNull)
+            return true;
+            
+        if (aNull != bNull)
+            return false;
+            
+        if (a.Length != b.Length)
+            return false;
+            
+        int length = a.Length;
+        for (int i = 0; i < length; i++)
+        {
+            if (!a[i].Equals(b[i]))
+                return false;
+        }
+            
+        return true;
     }
 }

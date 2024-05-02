@@ -33,7 +33,6 @@ public class PlayerLook : NetworkBehaviour
             if (cameraObj.TryGetComponent(out CameraController camFollow))
             {
                 camFollow.SnapCameraToAnchor(playerCameraAnchor);
-                camFollow.TickDelta = (float)base.TimeManager.TickDelta;
             }
             else
             {
