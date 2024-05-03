@@ -117,7 +117,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         
         MoveData md = BuildMoveData();
         Move(md);
-        _movesSinceLastTick.Enqueue(BuildMoveData());
+        _movesSinceLastTick.Enqueue(md);
     }
 
     private MoveData BuildMoveData()
