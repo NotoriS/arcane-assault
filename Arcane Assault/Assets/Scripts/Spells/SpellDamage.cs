@@ -12,12 +12,12 @@ public class SpellDamage : MonoBehaviour
         _spawnerId = spawnerId;
     }
 
-    private void OnTriggerEnter(Collider collider)
+    private void OnTriggerEnter(Collider c)
     {
-        NetworkObject networkObject = collider.gameObject.GetComponent<NetworkObject>();
+        NetworkObject networkObject = c.transform.root.gameObject.GetComponent<NetworkObject>();
         if (networkObject != null && networkObject.OwnerId == _spawnerId) return; // Hit self
 
-        IDamageable damageable = collider.gameObject.GetComponent<IDamageable>();
+        IDamageable damageable = c.gameObject.GetComponent<IDamageable>();
         if (damageable != null)
         {
             damageable.Damage(spellDamage);

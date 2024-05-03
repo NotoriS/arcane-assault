@@ -212,7 +212,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         Vector3 castOrigin = transform.position + new Vector3(0, 1, 0);
         float maxDistance = 1f + groundCheckPadding;
-        return Physics.Raycast(castOrigin, -transform.up, maxDistance, LayerMask.NameToLayer("PlayerModel"));
+        return Physics.Raycast(castOrigin, -transform.up, maxDistance, LayerMask.NameToLayer("PlayerRig"));
     }
 
     private void ApplyGravity(float deltaTime)

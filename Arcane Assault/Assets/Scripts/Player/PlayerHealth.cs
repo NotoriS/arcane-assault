@@ -10,7 +10,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private TextMeshProUGUI healthText;
 
-    [SerializeField] private GameObject playerModel;
+    [SerializeField] private GameObject playerRig;
+    [SerializeField] private GameObject playerRenderer;
     [SerializeField] private Transform deathCamAnchorPoint;
     [SerializeField] private float deathCamTransitionTime;
 
@@ -40,7 +41,6 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     {
         if (asServer && !base.IsServerOnlyInitialized) return;
         
-        Debug.Log($"Player #{base.OwnerId} Health: {_currentHealth.Value}");
         healthText.text = next.ToString();
 
         if (next <= 0) Kill();
@@ -49,7 +49,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     private void Kill()
     {
         OnPlayerDeath?.Invoke();
-        playerModel.SetActive(true);
+        playerRenderer.layer = LayerMask.NameToLayer("Default");
         EnableRagdoll();
         
         if (!base.IsOwner) return;
@@ -68,7 +68,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 
     private void SetRagdollParts()
     {
-        Collider[] colliders = playerModel.GetComponentsInChildren<Collider>();
+        Collider[] colliders = playerRig.GetComponentsInChildren<Collider>();
         foreach (Collider c in colliders)
         {
             c.isTrigger = true;
