@@ -64,6 +64,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     [SerializeField] private float groundCheckPadding = 0.01f;
 
     private Queue<MoveData> _movesSinceLastTick;
+    private bool _reconciledThisTick;
     
     private float _verticalVelocity;
     private bool _positionLocked;
@@ -113,6 +114,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     private void Update()
     {
         if (_positionLocked || !base.IsOwner) return;
+        
         MoveData md = BuildMoveData();
         Move(md);
         _movesSinceLastTick.Enqueue(BuildMoveData());
@@ -156,6 +158,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         if (_positionLocked) return;
         CreateReconcile();
+        _reconciledThisTick = false;
     }
 
     private ReplicateData BuildReplicateData()
@@ -178,8 +181,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     [Replicate]
     private void ReplicatedMove(ReplicateData rd, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
     {
-        // Prevents the owning client moving unless they are replaying
-        if (state == ReplicateState.CurrentCreated && base.IsOwner) return;
+        // Stops the client from moving a second time when no reconciliation has occured
+        if (base.IsOwner && !_reconciledThisTick) return;
         
         if (rd.Moves == null) return;
         foreach (MoveData md in rd.Moves)
@@ -193,6 +196,8 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         transform.position = rd.Position;
         _verticalVelocity = rd.VerticalVelocity;
+
+        _reconciledThisTick = true;
     }
 
     private void Jump()
