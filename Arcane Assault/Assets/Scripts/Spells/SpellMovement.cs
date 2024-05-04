@@ -82,10 +82,9 @@ public class SpellMovement : MonoBehaviour
         return shiftThisFrame;
     }
 
-    // Uses a sigmoidal function to smooth the shift toward the target
-    private static float SmoothInterpolant(float interpolent, bool regularized = true)
+    // Uses a cubic function to smooth the shift toward the target
+    private static float SmoothInterpolant(float interpolant)
     {
-        float regularizer = regularized ? SmoothInterpolant(1f, false) : 1f;
-        return ((1f / (1f + Mathf.Exp(-5f * interpolent))) - 0.5f) * 2f / regularizer;
+        return Mathf.Pow(interpolant - 1f, 3f) + 1f;
     }
 }
