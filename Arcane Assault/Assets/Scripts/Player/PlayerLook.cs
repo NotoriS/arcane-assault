@@ -26,23 +26,8 @@ public class PlayerLook : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        if (base.IsOwner)
-        {
-            GameObject cameraObj = GameObject.FindWithTag("MainCamera");
-            if (!cameraObj) Debug.LogError("Unable to find main camera object.");
-            if (cameraObj.TryGetComponent(out CameraController camFollow))
-            {
-                camFollow.SnapCameraToAnchor(playerCameraAnchor);
-            }
-            else
-            {
-                Debug.LogError("Unable to find CameraFollow component on main camera.");
-            }
-        }
-        else
-        {
-            enabled = false;
-        }
+        if (!base.IsOwner) return;
+        CameraManager.Instance.MainCameraController.SnapCameraToAnchor(playerCameraAnchor);
     }
 
     private void TimeManager_OnTick()

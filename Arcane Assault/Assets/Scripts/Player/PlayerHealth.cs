@@ -53,17 +53,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         EnableRagdoll();
         
         if (!base.IsOwner) return;
-        
-        GameObject cameraObj = GameObject.FindWithTag("MainCamera");
-        if (!cameraObj) Debug.LogError("Unable to find main camera object.");
-        if (cameraObj.TryGetComponent(out CameraController camFollow))
-        {
-            camFollow.LerpCameraToAnchor(deathCamAnchorPoint, deathCamTransitionTime);
-        }
-        else
-        {
-            Debug.LogError("Unable to find CameraFollow component on main camera.");
-        }
+        CameraManager.Instance.MainCameraController.LerpCameraToAnchor(deathCamAnchorPoint, deathCamTransitionTime);
     }
 
     private void SetRagdollParts()
