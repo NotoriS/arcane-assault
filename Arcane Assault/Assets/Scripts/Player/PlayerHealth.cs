@@ -11,7 +11,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     [SerializeField] private TextMeshProUGUI healthText;
 
     [SerializeField] private GameObject playerRig;
-    [SerializeField] private GameObject playerRenderer;
+    [SerializeField] private List<GameObject> playerRenderers;
     [SerializeField] private Transform deathCamAnchorPoint;
     [SerializeField] private float deathCamTransitionTime;
 
@@ -49,7 +49,10 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     private void Kill()
     {
         OnPlayerDeath?.Invoke();
-        playerRenderer.layer = LayerMask.NameToLayer("Default");
+        foreach (GameObject playerRenderer in playerRenderers)
+        {
+            playerRenderer.layer = LayerMask.NameToLayer("Default");
+        }
         EnableRagdoll();
         
         if (!base.IsOwner) return;
