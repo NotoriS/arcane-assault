@@ -380,7 +380,7 @@ MonoBehaviour:
   _ownerInterpolation: 1
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 4
+  <PrefabId>k__BackingField: 1
   <SpawnableCollectionId>k__BackingField: 0
   _scenePathHash: 0
   <SceneId>k__BackingField: 0
@@ -523,6 +523,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d276c64268b0b0843b65f22f60c74427, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movementTransitionAcceleration: 20
 --- !u!1 &8147178379938057551
 GameObject:
   m_ObjectHideFlags: 0

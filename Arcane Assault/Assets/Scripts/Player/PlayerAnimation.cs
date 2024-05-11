@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class PlayerAnimation : MonoBehaviour
 {
+    [SerializeField] private float movementTransitionAcceleration;
+
+    private Vector3 _currentAnimatedVelocity;
+    
     private Animator _animator;
     private SynchronizedPlayerMovement _playerMovement;
 
@@ -15,7 +19,13 @@ public class PlayerAnimation : MonoBehaviour
     private void Update()
     {
         Vector3 inputVelocity = Quaternion.Inverse(transform.rotation) * _playerMovement.Velocity;
-        _animator.SetFloat("VelocityZ", inputVelocity.z);
-        _animator.SetFloat("VelocityX", inputVelocity.x);
+
+        Vector3 diff = inputVelocity - _currentAnimatedVelocity;
+        Vector3 transition = diff.normalized * (movementTransitionAcceleration * Time.deltaTime);
+        transition = diff.magnitude < transition.magnitude ? diff : transition;
+        _currentAnimatedVelocity += transition;
+        
+        _animator.SetFloat("VelocityZ", _currentAnimatedVelocity.z);
+        _animator.SetFloat("VelocityX", _currentAnimatedVelocity.x);
     }
 }
