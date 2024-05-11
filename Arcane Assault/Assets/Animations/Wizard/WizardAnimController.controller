@@ -9,7 +9,7 @@ BlendTree:
   m_Name: Blend Tree
   m_Childs:
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: fd07a0f5c01686f448c8e9d83c1b9c94, type: 2}
+    m_Motion: {fileID: 7400000, guid: 814521eb77c01594785b86c4ac76bc89, type: 2}
     m_Threshold: 0
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
@@ -17,34 +17,34 @@ BlendTree:
     m_DirectBlendParameter: VelocityZ
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: c4fa65053a78c7949996fa123e653bfa, type: 2}
+    m_Motion: {fileID: 7400000, guid: a523b853c6e7d4f4684e8bbbc993ceb1, type: 2}
     m_Threshold: 0.25
-    m_Position: {x: -5, y: 0}
-    m_TimeScale: 3
+    m_Position: {x: -1, y: 0}
+    m_TimeScale: 1
     m_CycleOffset: 0
     m_DirectBlendParameter: VelocityZ
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 6e6e1d62467f35f45a0d9d96a64cb9d1, type: 2}
+    m_Motion: {fileID: 7400000, guid: 40d51df213d3cc648a8b2a870df04017, type: 2}
     m_Threshold: 0.5
-    m_Position: {x: 5, y: 0}
-    m_TimeScale: 3
+    m_Position: {x: 1, y: 0}
+    m_TimeScale: 1
     m_CycleOffset: 0
     m_DirectBlendParameter: VelocityZ
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 6cf0c2ad6cd96804eae285bbcd26ce79, type: 2}
+    m_Motion: {fileID: 7400000, guid: 5a2c8b0dfced76c4e90b043223c6df31, type: 2}
     m_Threshold: 0.75
-    m_Position: {x: 0, y: -5}
-    m_TimeScale: 3
+    m_Position: {x: 0, y: -1}
+    m_TimeScale: 1
     m_CycleOffset: 0
     m_DirectBlendParameter: VelocityZ
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 42d35d7c0a9a2af42b089991da02f8f7, type: 2}
+    m_Motion: {fileID: 7400000, guid: 07a59c744ba522f4396397689411bd31, type: 2}
     m_Threshold: 1
-    m_Position: {x: 0, y: 5}
-    m_TimeScale: 3
+    m_Position: {x: 0, y: 1}
+    m_TimeScale: 1
     m_CycleOffset: 0
     m_DirectBlendParameter: VelocityZ
     m_Mirror: 0
@@ -112,7 +112,7 @@ AnimatorController:
     m_BlendingMode: 0
     m_SyncedLayerIndex: -1
     m_DefaultWeight: 0
-    m_IKPass: 0
+    m_IKPass: 1
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
 --- !u!1107 &9034375052294674655
