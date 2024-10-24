@@ -145,6 +145,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         move = Quaternion.Euler(0, md.CurrentRotation, 0) * move;
 
         _characterController.Move(move * md.Delta);
+        if (IsGrounded()) move.y = 0f;
         Velocity = move;
     }
 
@@ -212,7 +213,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         Vector3 castOrigin = transform.position + new Vector3(0, 1, 0);
         float maxDistance = 1f + groundCheckPadding;
-        return Physics.Raycast(castOrigin, -transform.up, maxDistance, LayerMask.NameToLayer("PlayerRig"));
+        return Physics.Raycast(castOrigin, -transform.up, maxDistance, LayerMask.NameToLayer("Ragdoll"));
     }
 
     private void ApplyGravity(float deltaTime)

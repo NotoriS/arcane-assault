@@ -478,7 +478,8 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 3816660767559190648}
   maxHealth: 100
   healthText: {fileID: 1740955756619498323}
-  playerRig: {fileID: 2970331612316265457}
+  ragdoll: {fileID: 3767950689838047712, guid: 420e4b3e4c0c2d54ead7fcfb2b883c23, type: 3}
+  playerModel: {fileID: 3097585460144801962}
   playerRenderers:
   - {fileID: 952631759599513311}
   - {fileID: 2803081167710648082}
@@ -733,10 +734,20 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4161540713855113284, guid: 1bcfa7b373a8464468b001ff00c96770,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 1bcfa7b373a8464468b001ff00c96770,
         type: 3}
       propertyPath: m_Name
       value: Wizard
+      objectReference: {fileID: 0}
+    - target: {fileID: 1082271958561512970, guid: 1bcfa7b373a8464468b001ff00c96770,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 1bcfa7b373a8464468b001ff00c96770,
         type: 3}
@@ -781,9 +792,9 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2755565536817821179}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2970331612316265457 stripped
+--- !u!1 &3097585460144801962 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 1082271958561512970, guid: 1bcfa7b373a8464468b001ff00c96770,
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 1bcfa7b373a8464468b001ff00c96770,
     type: 3}
   m_PrefabInstance: {fileID: 2755565536817821179}
   m_PrefabAsset: {fileID: 0}
