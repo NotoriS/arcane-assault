@@ -45,10 +45,6 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     private void Kill()
     {
         OnPlayerDeath?.Invoke();
-        foreach (GameObject playerRenderer in playerRenderers)
-        {
-            playerRenderer.layer = LayerMask.NameToLayer("Default");
-        }
         gameObject.GetComponent<CharacterController>().enabled = false;
         playerModel.SetActive(false);
         SpawnRagdoll();
