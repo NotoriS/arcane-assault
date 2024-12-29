@@ -6,6 +6,8 @@ Arcane Assault is a competitive first-person shooter built in Unity that replace
 
 This project is a work in progress, and additional features and improvements will be made going forward.
 
+[Watch an Early Development Video](https://www.youtube.com/watch?v=XCuuK3DM2FY)
+
 ## Current Key Features
 
 - **Synchronized Movement**: Smooth, accurate movement using client-side prediction and reconciliation to ensure minimal lag and desync.
