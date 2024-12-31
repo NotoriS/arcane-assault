@@ -16,3 +16,9 @@ This project is a work in progress, and additional features and improvements wil
 ## Networking
 
 Arcane Assault uses the [Fish-Networking](https://fish-networking.gitbook.io/docs) framework to handle its multiplayer features.
+
+## Missing Assets
+
+This project uses paid assets from the Unity Asset Store. In order to clone this project, you will need to own the following asset bundles and include them in the AssetStore folder:
+
+- [Low Poly Dungeons](http://assetstore.unity.com/packages/slug/176350) by JustCreate
