@@ -414,16 +414,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 3816660767559190648}
-  _networkObjectCache: {fileID: 3816660767559190648}
+  _networkObjectCache: {fileID: 0}
   maxGroundSpeed: 5
-  stopSpeed: 1
-  maxAirSpeed: 0.5
-  maxAccelaration: 50
-  friction: 0.1
-  jumpVelocity: 5
-  groundedVerticalVelocity: -0.45
-  gravity: -9.81
-  speed: 0
+  groundDeceleration: 20
+  airStrafeIntensity: 0.22
+  maxAcceleration: 50
+  jumpVelocity: 6
+  groundedVerticalVelocity: -0.01
+  gravity: -14
+  groundCheckSphereOffset: {x: 0, y: 0.39, z: 0}
+  groundCheckSphereRadius: 0.4
+  includedGroundCheckLayers:
+    serializedVersion: 2
+    m_Bits: 8
 --- !u!114 &629077718831310026
 MonoBehaviour:
   m_ObjectHideFlags: 0

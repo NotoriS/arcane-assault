@@ -80,11 +80,22 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     [Tooltip("The upward velocity that will be set when the character jumps.")]
     private float jumpVelocity = 5f;
     [SerializeField]
-    [Tooltip("The upward velocity that will be set when the character is on the ground. This must be configured to prevent the character controller from returning incorrect isGrounded values.")]
+    [Tooltip("The upward velocity that will be set when the character is on the ground.")]
     private float groundedVerticalVelocity = -0.1f;
     [SerializeField]
     [Tooltip("The force of gravity on the player.")]
     private float gravity = -9.81f;
+
+    [Header("Ground Check")]
+    [SerializeField]
+    [Tooltip("Offset from the player pivot of the sphere check used to see if the player is grounded.")]
+    private Vector3 groundCheckSphereOffset = Vector3.zero;
+    [SerializeField]
+    [Tooltip("Radius of the sphere check used to see if the player is grounded.")]
+    private float groundCheckSphereRadius = 1f;
+    [SerializeField]
+    [Tooltip("Layers that are included during the ground check.")]
+    private LayerMask includedGroundCheckLayers;
 
     private Queue<MoveData> _movesSinceLastTick;
     private bool _reconciledThisTick;
@@ -169,7 +180,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         wishDir.Normalize();
         wishDir = Quaternion.Euler(0, md.CurrentRotation, 0) * wishDir;
 
-        if (_characterController.isGrounded) UpdateHorizontalGroundVelocity(wishDir, md.Delta);
+        if (IsGrounded()) UpdateHorizontalGroundVelocity(wishDir, md.Delta);
         else UpdateHorizontalAirVelocity(wishDir, md.Delta);
 
         Velocity = new Vector3(_horizontalVelocity.x, _verticalVelocity, _horizontalVelocity.z);
@@ -261,9 +272,14 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         _reconciledThisTick = true;
     }
 
+    private bool IsGrounded()
+    {
+        return Physics.CheckSphere(transform.position + groundCheckSphereOffset, groundCheckSphereRadius, includedGroundCheckLayers);
+    }
+
     private void Jump()
     {
-        if (_characterController.isGrounded)
+        if (IsGrounded())
         {
             _verticalVelocity = jumpVelocity;
         }
@@ -273,7 +289,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     {
         _verticalVelocity += gravity * deltaTime;
 
-        if (_characterController.isGrounded && _verticalVelocity <= groundedVerticalVelocity)
+        if (IsGrounded() && _verticalVelocity <= groundedVerticalVelocity)
         {
             _verticalVelocity = groundedVerticalVelocity;
         }
