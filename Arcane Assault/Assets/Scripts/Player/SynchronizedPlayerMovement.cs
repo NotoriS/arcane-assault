@@ -44,11 +44,13 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     public struct ReconcileData : IReconcileData
     {
         public Vector3 Position;
+        public Vector3 HorizontalVelocity;
         public float VerticalVelocity;
 
-        public ReconcileData(Vector3 position, float verticalVelocity)
+        public ReconcileData(Vector3 position, Vector3 horizontalVelocity, float verticalVelocity)
         {
             Position = position;
+            HorizontalVelocity = horizontalVelocity;
             VerticalVelocity = verticalVelocity;
             _tick = 0;
         }
@@ -59,13 +61,35 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         public void SetTick(uint value) => _tick = value;
     }
 
-    [SerializeField] private float moveRate = 5f;
-    [SerializeField] private float jumpVelocity = 5f;
-    [SerializeField] private float groundCheckPadding = 0.01f;
+    [Header("Horizontal Movement")]
+    [SerializeField]
+    [Tooltip("The maximum speed the player can move on the ground.")]
+    private float maxGroundSpeed = 5f;
+    [SerializeField]
+    [Tooltip("The ammount the player decelerates when on the ground.")]
+    private float groundDeceleration = 20f;
+    [SerializeField]
+    [Tooltip("Effects how much speed the player will gain when air strafing.")]
+    private float airStrafeIntensity = 0.5f;
+    [SerializeField]
+    [Tooltip("Maximum acceleration of the player.")]
+    private float maxAcceleration = 50f;
+
+    [Header("Vertical Movement")]
+    [SerializeField]
+    [Tooltip("The upward velocity that will be set when the character jumps.")]
+    private float jumpVelocity = 5f;
+    [SerializeField]
+    [Tooltip("The upward velocity that will be set when the character is on the ground. This must be configured to prevent the character controller from returning incorrect isGrounded values.")]
+    private float groundedVerticalVelocity = -0.1f;
+    [SerializeField]
+    [Tooltip("The force of gravity on the player.")]
+    private float gravity = -9.81f;
 
     private Queue<MoveData> _movesSinceLastTick;
     private bool _reconciledThisTick;
-    
+
+    private Vector3 _horizontalVelocity;
     private float _verticalVelocity;
     private bool _positionLocked;
 
@@ -141,12 +165,47 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
         if (md.JumpPressed) Jump();
         ApplyGravity(md.Delta);
 
-        Vector3 move = new Vector3(md.Horizontal, 0f, md.Vertical).normalized * moveRate + new Vector3(0f, _verticalVelocity, 0f);
-        move = Quaternion.Euler(0, md.CurrentRotation, 0) * move;
+        Vector3 wishDir = new(md.Horizontal, 0f, md.Vertical);
+        wishDir.Normalize();
+        wishDir = Quaternion.Euler(0, md.CurrentRotation, 0) * wishDir;
 
-        _characterController.Move(move * md.Delta);
-        if (IsGrounded()) move.y = 0f;
-        Velocity = move;
+        if (_characterController.isGrounded) UpdateHorizontalGroundVelocity(wishDir, md.Delta);
+        else UpdateHorizontalAirVelocity(wishDir, md.Delta);
+
+        Velocity = new Vector3(_horizontalVelocity.x, _verticalVelocity, _horizontalVelocity.z);
+        _characterController.Move(Velocity * md.Delta);
+    }
+
+    private void UpdateHorizontalGroundVelocity(Vector3 wishDir, float deltaTime)
+    {
+        ApplyDeceleration(deltaTime);
+
+        float projectedSpeed = Vector3.Dot(_horizontalVelocity, wishDir);
+        float addSpeed = Mathf.Clamp(maxGroundSpeed - projectedSpeed, 0, maxAcceleration * deltaTime);
+
+        _horizontalVelocity += addSpeed * wishDir;
+
+        if (_horizontalVelocity.magnitude > maxGroundSpeed)
+            _horizontalVelocity *= maxGroundSpeed / _horizontalVelocity.magnitude;
+    }
+
+    private void UpdateHorizontalAirVelocity(Vector3 wishDir, float deltaTime)
+    {
+        float projectedSpeed = Vector3.Dot(_horizontalVelocity, wishDir);
+        float addSpeed = Mathf.Clamp(airStrafeIntensity - projectedSpeed, 0, maxAcceleration * deltaTime);
+
+        _horizontalVelocity += addSpeed * wishDir;
+    }
+
+    private void ApplyDeceleration(float deltaTime)
+    {
+        float speed = _horizontalVelocity.magnitude;
+        if (speed == 0) return;
+
+        float newSpeed = speed - groundDeceleration * deltaTime;
+        newSpeed = Mathf.Max(newSpeed, 0);
+
+        _horizontalVelocity *= newSpeed / speed;
     }
 
     private void TimeManager_OnTick()
@@ -175,7 +234,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     public override void CreateReconcile()
     {
         if (!base.IsServerInitialized) return;
-        ReconcileData rd = new ReconcileData(transform.position, _verticalVelocity);
+        ReconcileData rd = new ReconcileData(transform.position, _horizontalVelocity, _verticalVelocity);
         Reconciliation(rd);
     }
 
@@ -196,6 +255,7 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
     private void Reconciliation(ReconcileData rd, Channel channel = Channel.Unreliable)
     {
         transform.position = rd.Position;
+        _horizontalVelocity = rd.HorizontalVelocity;
         _verticalVelocity = rd.VerticalVelocity;
 
         _reconciledThisTick = true;
@@ -203,27 +263,19 @@ public class SynchronizedPlayerMovement : NetworkBehaviour
 
     private void Jump()
     {
-        if (IsGrounded())
+        if (_characterController.isGrounded)
         {
             _verticalVelocity = jumpVelocity;
         }
     }
 
-    private bool IsGrounded()
-    {
-        Vector3 castOrigin = transform.position + new Vector3(0, 1, 0);
-        float maxDistance = 1f + groundCheckPadding;
-        return Physics.Raycast(castOrigin, -transform.up, maxDistance, LayerMask.NameToLayer("Ragdoll"));
-    }
-
     private void ApplyGravity(float deltaTime)
     {
-        float stillVelocity = _characterController.stepOffset / -2f / deltaTime;
-        _verticalVelocity += Physics.gravity.y * deltaTime;
+        _verticalVelocity += gravity * deltaTime;
 
-        if (_characterController.isGrounded && _verticalVelocity <= stillVelocity)
+        if (_characterController.isGrounded && _verticalVelocity <= groundedVerticalVelocity)
         {
-            _verticalVelocity = stillVelocity;
+            _verticalVelocity = groundedVerticalVelocity;
         }
     }
 
